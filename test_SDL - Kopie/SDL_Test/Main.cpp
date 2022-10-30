@@ -1,6 +1,6 @@
-#include <stdio.h>
+#include <filesystem>
 #include <stdexcept>
-
+#include <stdio.h>
 // ATTENTION
 // This file is only to check if
 // SDL is correctly installed and linked against
@@ -10,63 +10,66 @@
 // and violates some other rules
 
 #ifdef WINDOWSOS
-  #include <SDL.h>
-  #include <SDL_image.h>
+#    include <SDL.h>
+#    include <SDL_image.h>
 #else
-  #include <SDL2/SDL.h>
-  #include <SDL2/SDL_image.h>
+#    include <SDL2/SDL.h>
+#    include <SDL2/SDL_image.h>
 #endif
 
+#include <iostream>
 
-int main(int argc, char* argv[])
+int main(int argc, char *argv[])
 {
-  //Initialize SDL
-  if (SDL_Init(SDL_INIT_VIDEO) < 0)
-    throw std::runtime_error(std::string(SDL_GetError()));
+    // Initialize SDL
+    if (SDL_Init(SDL_INIT_VIDEO) < 0)
+        throw std::runtime_error(std::string(SDL_GetError()));
 
-  //Initialize PNG loading
-  int imgFlags = IMG_INIT_PNG;
-  if (!(IMG_Init(imgFlags) & imgFlags))
-    throw std::runtime_error("SDL_image could not initialize! "
-                             "SDL_image Error: " + std::string(IMG_GetError()));
+    // Initialize PNG loading
+    int imgFlags = IMG_INIT_PNG;
+    if (!(IMG_Init(imgFlags) & imgFlags))
+        throw std::runtime_error("SDL_image could not initialize! "
+                                 "SDL_image Error: "
+                                 + std::string(IMG_GetError()));
 
+    auto window_ptr = SDL_CreateWindow("SDL2 Window", SDL_WINDOWPOS_CENTERED,
+                                       SDL_WINDOWPOS_CENTERED, 194, 259, 0);
 
-  auto window_ptr = SDL_CreateWindow("SDL2 Window",
-                                     SDL_WINDOWPOS_CENTERED,
-                                     SDL_WINDOWPOS_CENTERED,
-                                     194, 259,
-                                     0);
+    if (!window_ptr)
+        throw std::runtime_error(std::string(SDL_GetError()));
 
-  if (!window_ptr)
-    throw std::runtime_error(std::string(SDL_GetError()));
+    auto window_surface_ptr = SDL_GetWindowSurface(window_ptr);
 
-  auto window_surface_ptr = SDL_GetWindowSurface(window_ptr);
+    if (!window_surface_ptr)
+        throw std::runtime_error(std::string(SDL_GetError()));
+    // std:: cwd = std::filesystem::current_path() / "filename.txt";
 
-  if (!window_surface_ptr)
-    throw std::runtime_error(std::string(SDL_GetError()));
+    auto surf = IMG_Load(
+        "/home/huu-phuc-le/cpp_phuc/SDL_Project/test_SDL - Kopie/img.png");
+    if (!surf)
+        throw std::runtime_error("Could not load image");
 
-  auto surf = IMG_Load("img.png");
-  if (!surf)
-    throw std::runtime_error("Could not load image");
-  auto rect = SDL_Rect{0,0,194,259};
-  if (SDL_BlitSurface(surf, NULL, window_surface_ptr, &rect))
-      throw std::runtime_error("Could not apply texture.");
+    auto rect = SDL_Rect{ 0, 0, 194, 259 };
+    if (SDL_BlitSurface(surf, NULL, window_surface_ptr, &rect))
+        throw std::runtime_error("Could not apply texture.");
 
+    SDL_UpdateWindowSurface(window_ptr);
 
-  SDL_UpdateWindowSurface(window_ptr);
+    auto start = SDL_GetTicks();
 
-  auto start = SDL_GetTicks();
+    SDL_Event e;
+    bool quit = false;
+    while (!quit && (SDL_GetTicks() - start < 10000))
+    {
+        while (SDL_PollEvent(&e))
+        {
+            if (e.type == SDL_QUIT)
+            {
+                quit = true;
+                break;
+            }
+        }
+    }
 
-  SDL_Event e;
-  bool quit = false;
-  while (!quit && (SDL_GetTicks() - start < 10000)) {
-      while (SDL_PollEvent(&e)) {
-          if (e.type == SDL_QUIT) {
-              quit = true;
-              break;
-          }
-      }
-  }
-
-  return 0;
+    return 0;
 }
