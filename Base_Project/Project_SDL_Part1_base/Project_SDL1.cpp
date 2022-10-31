@@ -94,7 +94,7 @@ int application::loop(unsigned period)
     //     throw std::runtime_error("Could not load image");
 
     auto surf = load_surface_for(
-        "../media/farm.png",
+        "../../media/farm.png",
         window_surface_ptr_);
 
     if (SDL_BlitSurface(surf, NULL, window_surface_ptr_, &dst_rect))
