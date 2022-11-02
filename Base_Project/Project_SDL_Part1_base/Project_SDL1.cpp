@@ -38,8 +38,6 @@ namespace
         if (!surf)
             throw std::runtime_error("Could not load image");
         // See SDL_ConvertSurface
-        // SDL_CreateRGBSurface(0,w,h,32,0,0,0,0);
-        // SDL_PixelFormat *format = SDL_AllocFormat(SDL_PIXELFORMAT_RGBA32);
 
         auto op_surface_ptr =
             SDL_ConvertSurface(surf, window_surface_ptr->format, 0);
@@ -49,16 +47,30 @@ namespace
                    SDL_GetError());
         }
         SDL_FreeSurface(surf);
-        // SDL_FreeFormat(format);
         return op_surface_ptr; // false juste for compilation
     }
 } // namespace
-application::application(unsigned n_sheep, unsigned n_wolf)
+
+ground::ground(SDL_Surface *window_surface_ptr)
 {
-    _n_sheep = n_sheep;
-    _n_wolf = n_wolf;
+    window_surface_ptr_ = window_surface_ptr;
+}
+void ground::add_animal(unsigned n_sheep, unsigned n_wolf)
+{
+    this->_n_sheep = n_sheep;
+    this->_n_wolf = n_wolf;
     // _sheeps = std::make_unique<sheep[]>(n_sheep);
     // _wolfs = std::make_unique<wolf[]>(n_wolf);
+}
+// ground::~ground()
+// {
+//     SDL_FreeSurface(window_surface_ptr_);
+//     window_surface_ptr_ = NULL;
+// }
+void ground::update()
+{}
+application::application(unsigned n_sheep, unsigned n_wolf)
+{
     window_ptr_ = SDL_CreateWindow("SDL2 Window", SDL_WINDOWPOS_CENTERED,
                                    SDL_WINDOWPOS_CENTERED, application_w,
                                    application_h, SDL_WINDOW_SHOWN);
@@ -70,10 +82,14 @@ application::application(unsigned n_sheep, unsigned n_wolf)
 
     if (!window_surface_ptr_)
         throw std::runtime_error(std::string(SDL_GetError()));
+    this->_ground = ground(window_surface_ptr_);
+    _ground.add_animal(n_sheep, n_wolf);
 }
 
 application::~application()
 {
+
+
     SDL_FreeSurface(window_surface_ptr_);
     window_surface_ptr_ = NULL;
 
@@ -88,14 +104,7 @@ int application::loop(unsigned period)
     // auto src_rect = SDL_Rect{ 0, 0, (int)application_h, (int)application_w };
     auto dst_rect = SDL_Rect{ 0, 0, (int)application_h, (int)application_w };
 
-    // auto surf = IMG_Load(
-    //     "/home/huu-phuc-le/cpp_phuc/SDL_Project/Base_Project/media/farm.png");
-    // if (!surf)
-    //     throw std::runtime_error("Could not load image");
-
-    auto surf = load_surface_for(
-        "../../media/farm.png",
-        window_surface_ptr_);
+    auto surf = load_surface_for("../../media/farm.png", window_surface_ptr_);
 
     if (SDL_BlitSurface(surf, NULL, window_surface_ptr_, &dst_rect))
         throw std::runtime_error("Could not apply texture.");

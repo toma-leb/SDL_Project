@@ -51,7 +51,6 @@ public:
 // class sheep, derived from animal
 class sheep : public animal
 {
-
     // todo
     // Ctor
     // Dtor
@@ -79,13 +78,17 @@ private:
     SDL_Surface *window_surface_ptr_;
 
     // Some attribute to store all the wolves and sheep
+    unsigned _n_sheep;
+    unsigned _n_wolf;
+    // std::unique_ptr<sheep[]> _sheeps;
+    // std::unique_ptr<wolf[]> _wolfs;
     // here
 
 public:
-    ground(SDL_Surface *window_surface_ptr); // todo: Ctor
+    // ground() = default;
+    ground(SDL_Surface *); // todo: Ctor
     ~ground(){}; // todo: Dtor, again for clean up (if necessary)
-    // void add_animal(some argument here); // todo: Add an animal
-    void add_animal(); // todo: Add an animal
+    void add_animal(unsigned n_sheep, unsigned n_wolf); // todo: Add an animal
     void update(); // todo: "refresh the screen": Move animals and draw them
     // Possibly other methods, depends on your implementation
 };
@@ -100,14 +103,9 @@ private:
     SDL_Event window_event_;
 
     // Other attributes here, for example an instance of ground
-    // ground _ground;// TODO
+    ground _ground=NULL; // TODO
     unsigned application_h = 800;
     unsigned application_w = 1200;
-
-    unsigned _n_sheep;
-    unsigned _n_wolf;
-    // std::unique_ptr<sheep[]> _sheeps;
-    // std::unique_ptr<wolf[]> _wolfs;
 
 public:
     application(unsigned n_sheep, unsigned n_wolf); // Ctor
