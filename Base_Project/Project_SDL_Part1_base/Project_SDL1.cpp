@@ -51,6 +51,24 @@ namespace
     }
 } // namespace
 
+// animal
+animal::animal(const std::string &file_path, SDL_Surface *window_surface_ptr)
+{
+    window_surface_ptr_ = window_surface_ptr;
+    image_ptr_ = load_surface_for("../../media/farm.png", window_surface_ptr_);
+}
+animal::~animal()
+{
+    SDL_FreeSurface(image_ptr_);
+    image_ptr_ = NULL;
+}
+void animal::draw()
+{
+    auto dst_rect = SDL_Rect{ 0, 0, (int)a_height, (int)a_width };
+    if (SDL_BlitSurface(image_ptr_, NULL, window_surface_ptr_, &dst_rect))
+        throw std::runtime_error("Could not apply texture.");
+}
+// ground
 ground::ground(SDL_Surface *window_surface_ptr)
 {
     window_surface_ptr_ = window_surface_ptr;
@@ -67,8 +85,12 @@ void ground::add_animal(unsigned n_sheep, unsigned n_wolf)
 //     SDL_FreeSurface(window_surface_ptr_);
 //     window_surface_ptr_ = NULL;
 // }
+
+// TODO: implement ground drawing
 void ground::update()
 {}
+
+// application
 application::application(unsigned n_sheep, unsigned n_wolf)
 {
     window_ptr_ = SDL_CreateWindow("SDL2 Window", SDL_WINDOWPOS_CENTERED,
@@ -88,8 +110,6 @@ application::application(unsigned n_sheep, unsigned n_wolf)
 
 application::~application()
 {
-
-
     SDL_FreeSurface(window_surface_ptr_);
     window_surface_ptr_ = NULL;
 

@@ -31,17 +31,23 @@ private:
     SDL_Surface *image_ptr_; // The texture of the sheep (the loaded image), use
                              // load_surface_for
     // todo: Attribute(s) to define its position
+    size_t a_pos_x;
+    size_t a_pos_y;
+    size_t a_speed;
+    size_t a_width;
+    size_t a_height;
+
 public:
-    animal(const std::string &file_path, SDL_Surface *window_surface_ptr){};
+    animal(const std::string &file_path, SDL_Surface *window_surface_ptr);
     // todo: The constructor has to load the sdl_surface that corresponds to the
     // texture
-    ~animal(){}; // todo: Use the destructor to release memory and "clean up
-                 // behind you"
+    ~animal(); // todo: Use the destructor to release memory and "clean up
+               // behind you"
 
-    void
-    draw(){}; // todo: Draw the animal on the screen <-> window_surface_ptr.
-              // Note that this function is not virtual, it does not depend
-              // on the static type of the instance
+    void draw();
+    // todo: Draw the animal on the screen <-> window_surface_ptr.
+    // Note that this function is not virtual, it does not depend
+    // on the static type of the instance
 
     virtual void move(){}; // todo: Animals move around, but in a different
                            // fashion depending on which type of animal
@@ -103,7 +109,7 @@ private:
     SDL_Event window_event_;
 
     // Other attributes here, for example an instance of ground
-    ground _ground=NULL; // TODO
+    ground _ground = NULL; // TODO
     unsigned application_h = 800;
     unsigned application_w = 1200;
 
