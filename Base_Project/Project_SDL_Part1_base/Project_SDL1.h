@@ -31,18 +31,20 @@ private:
     SDL_Surface *image_ptr_; // The texture of the sheep (the loaded image), use
                              // load_surface_for
     // todo: Attribute(s) to define its position
-    size_t a_pos_x;
-    size_t a_pos_y;
-    size_t a_speed;
-    size_t a_width;
-    size_t a_height;
+    size_t a_width = 55;
+    size_t a_height = 55;
+
+protected:
+    size_t _pos_x;
+    size_t _pos_y;
+    size_t _speed;
 
 public:
     animal(const std::string &file_path, SDL_Surface *window_surface_ptr);
     // todo: The constructor has to load the sdl_surface that corresponds to the
     // texture
-    ~animal(); // todo: Use the destructor to release memory and "clean up
-               // behind you"
+    virtual ~animal(); // todo: Use the destructor to release memory and "clean
+                       // up behind you"
 
     void draw();
     // todo: Draw the animal on the screen <-> window_surface_ptr.
@@ -58,9 +60,15 @@ public:
 class sheep : public animal
 {
     // todo
+    const std::string file_path = "../../media/sheep.png";
+
     // Ctor
+public:
+    sheep(SDL_Surface *window_surface_ptr);
     // Dtor
+    virtual ~sheep() override;
     // implement functions that are purely virtual in base class
+    virtual void move() override;
 };
 
 // Insert here:
@@ -82,6 +90,7 @@ class ground
 private:
     // Attention, NON-OWNING ptr, again to the screen
     SDL_Surface *window_surface_ptr_;
+    const std::string file_path = "../../media/farm.png";
 
     // Some attribute to store all the wolves and sheep
     unsigned _n_sheep;
@@ -109,7 +118,7 @@ private:
     SDL_Event window_event_;
 
     // Other attributes here, for example an instance of ground
-    ground _ground = NULL; // TODO
+    ground _ground; // TODO
     unsigned application_h = 800;
     unsigned application_w = 1200;
 

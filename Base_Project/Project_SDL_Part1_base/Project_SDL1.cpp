@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <cassert>
 #include <cstdlib>
+#include <ctime>
 #include <numeric>
 #include <random>
 #include <string>
@@ -47,20 +48,29 @@ namespace
                    SDL_GetError());
         }
         SDL_FreeSurface(surf);
-        return op_surface_ptr; // false juste for compilation
+        return op_surface_ptr;
     }
+    int get_rand_direction()
+    {
+        std::srand(std::time(nullptr));
+        // use current time as seed for random generator
+        int random_variable = std::rand() % 2 - 1;
+
+        return random_variable;
+    };
 } // namespace
 
 // animal
 animal::animal(const std::string &file_path, SDL_Surface *window_surface_ptr)
 {
     window_surface_ptr_ = window_surface_ptr;
-    image_ptr_ = load_surface_for("../../media/farm.png", window_surface_ptr_);
+    image_ptr_ = load_surface_for(file_path, window_surface_ptr_);
 }
 animal::~animal()
 {
     SDL_FreeSurface(image_ptr_);
     image_ptr_ = NULL;
+    std::cout << " An animal died" << std::endl;
 }
 void animal::draw()
 {
@@ -68,6 +78,25 @@ void animal::draw()
     if (SDL_BlitSurface(image_ptr_, NULL, window_surface_ptr_, &dst_rect))
         throw std::runtime_error("Could not apply texture.");
 }
+// sheep
+sheep::sheep(SDL_Surface *window_surface_ptr)
+    : animal("../../media/sheep.png", window_surface_ptr)
+{
+    this->_pos_x = 50;
+    this->_pos_y = 50;
+    this->_speed = 10;
+}
+sheep::~sheep()
+{
+    std::cout << " A sheep died" << std::endl;
+}
+
+void sheep::move()
+{
+    this->_pos_x += this->_speed * get_rand_direction();
+    this->_pos_y += this->_speed * get_rand_direction();
+}
+// wolfs
 // ground
 ground::ground(SDL_Surface *window_surface_ptr)
 {
@@ -92,6 +121,7 @@ void ground::update()
 
 // application
 application::application(unsigned n_sheep, unsigned n_wolf)
+    : _ground(window_surface_ptr_)
 {
     window_ptr_ = SDL_CreateWindow("SDL2 Window", SDL_WINDOWPOS_CENTERED,
                                    SDL_WINDOWPOS_CENTERED, application_w,
@@ -104,7 +134,7 @@ application::application(unsigned n_sheep, unsigned n_wolf)
 
     if (!window_surface_ptr_)
         throw std::runtime_error(std::string(SDL_GetError()));
-    this->_ground = ground(window_surface_ptr_);
+    // this->_ground = ground(window_surface_ptr_);
     _ground.add_animal(n_sheep, n_wolf);
 }
 
@@ -116,6 +146,7 @@ application::~application()
     SDL_DestroyWindow(window_ptr_);
     window_ptr_ = NULL;
 }
+
 int application::loop(unsigned period)
 {
     auto lastUpdateTime = SDL_GetTicks();
