@@ -97,7 +97,7 @@ void sheep::move()
     this->_pos_y += this->_speed * get_rand_direction();
 }
 // wolfs
-// ground
+//---------------------- ground
 ground::ground(SDL_Surface *window_surface_ptr)
 {
     window_surface_ptr_ = window_surface_ptr;
@@ -115,13 +115,21 @@ void ground::add_animal(unsigned n_sheep, unsigned n_wolf)
 //     window_surface_ptr_ = NULL;
 // }
 
-// TODO: implement ground drawing
+void ground::draw(SDL_Surface *window_surface_ptr_)
+{
+    auto dst_rect = SDL_Rect{ 0, 0, (int)application_h, (int)application_w };
+
+    auto surf = load_surface_for("../../media/farm.png", window_surface_ptr_);
+
+    if (SDL_BlitSurface(surf, NULL, window_surface_ptr_, &dst_rect))
+        throw std::runtime_error("Could not apply texture.");
+}
 void ground::update()
 {}
 
 // application
 application::application(unsigned n_sheep, unsigned n_wolf)
-    : _ground(window_surface_ptr_)
+// : _ground(window_surface_ptr_)
 {
     window_ptr_ = SDL_CreateWindow("SDL2 Window", SDL_WINDOWPOS_CENTERED,
                                    SDL_WINDOWPOS_CENTERED, application_w,
@@ -134,8 +142,9 @@ application::application(unsigned n_sheep, unsigned n_wolf)
 
     if (!window_surface_ptr_)
         throw std::runtime_error(std::string(SDL_GetError()));
+    _ground = std::make_unique<ground>(window_surface_ptr_);
     // this->_ground = ground(window_surface_ptr_);
-    _ground.add_animal(n_sheep, n_wolf);
+    _ground->add_animal(n_sheep, n_wolf);
 }
 
 application::~application()
@@ -153,12 +162,14 @@ int application::loop(unsigned period)
     bool quit = false;
 
     // auto src_rect = SDL_Rect{ 0, 0, (int)application_h, (int)application_w };
-    auto dst_rect = SDL_Rect{ 0, 0, (int)application_h, (int)application_w };
+    // auto dst_rect = SDL_Rect{ 0, 0, (int)application_h, (int)application_w };
 
-    auto surf = load_surface_for("../../media/farm.png", window_surface_ptr_);
+    // auto surf = load_surface_for("../../media/farm.png",
+    // window_surface_ptr_);
 
-    if (SDL_BlitSurface(surf, NULL, window_surface_ptr_, &dst_rect))
-        throw std::runtime_error("Could not apply texture.");
+    // if (SDL_BlitSurface(surf, NULL, window_surface_ptr_, &dst_rect))
+    //     throw std::runtime_error("Could not apply texture.");
+    _ground->draw(window_surface_ptr_);
 
     SDL_UpdateWindowSurface(window_ptr_);
 

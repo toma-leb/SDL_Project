@@ -93,6 +93,8 @@ private:
     const std::string file_path = "../../media/farm.png";
 
     // Some attribute to store all the wolves and sheep
+    unsigned application_h = 800;
+    unsigned application_w = 1200;
     unsigned _n_sheep;
     unsigned _n_wolf;
     // std::unique_ptr<sheep[]> _sheeps;
@@ -101,8 +103,9 @@ private:
 
 public:
     // ground() = default;
-    ground(SDL_Surface *); // todo: Ctor
-    ~ground(){}; // todo: Dtor, again for clean up (if necessary)
+    ground(SDL_Surface *); // Ctor
+    ~ground(){}; // Dtor, again for clean up (if necessary)
+    void draw(SDL_Surface *window_surface_ptr_);
     void add_animal(unsigned n_sheep, unsigned n_wolf); // todo: Add an animal
     void update(); // todo: "refresh the screen": Move animals and draw them
     // Possibly other methods, depends on your implementation
@@ -118,7 +121,7 @@ private:
     SDL_Event window_event_;
 
     // Other attributes here, for example an instance of ground
-    ground _ground; // TODO
+    std::unique_ptr<ground> _ground; // TODO
     unsigned application_h = 800;
     unsigned application_w = 1200;
 
