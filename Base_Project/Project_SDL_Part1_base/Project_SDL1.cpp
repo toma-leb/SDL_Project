@@ -50,7 +50,7 @@ namespace
         SDL_FreeSurface(surf);
         return op_surface_ptr;
     }
-    int get_rand_direction()
+    int get_rand_direction() // get random direction -1,0,1
     {
         std::srand(std::time(nullptr));
         // use current time as seed for random generator
@@ -62,7 +62,7 @@ namespace
     void wait_until_next_second()
     {
         time_t before = time(0);
-        while (difftime(time(0), before) < 1)
+        while (difftime(time(0), before) < 0.5)
             ;
     }
 } // namespace
@@ -91,20 +91,36 @@ void animal::draw()
 sheep::sheep(SDL_Surface *window_surface_ptr)
     : animal("../../media/sheep.png", window_surface_ptr)
 {
-    this->_pos_x = 50;
-    this->_pos_y = 50;
-    this->_speed = 10;
+    this->a_height = 55;
+    this->a_width = 55;
+    this->_pos_x = 50; // right  || left
+    this->_pos_y = 50; // up || down
+    this->_speed = 5; // it's just the speed of the sheep
 }
 sheep::~sheep()
 {
     std::cout << " A sheep died" << std::endl;
 }
 
-void sheep::move()
+void sheep::move() //TODO
+
 {
     // double delta_time = 1.0 / 60.0; // 60 FPS
-    this->_pos_x += this->_speed ;
-    this->_pos_y += this->_speed ;
+    bool right = true;
+    while (true)
+    {
+        _pos_x += right ? _speed : _speed*-1;
+        std::cout << right << _pos_x << std::endl; 
+
+        if (this->_pos_x + a_width < 1200 && this->_pos_x > 0)
+            break;
+        else if (this->_pos_x + a_width > 1200)
+            right = false;
+        else if(this->_pos_x < 0)
+            right = true;
+    }
+
+    // this->_pos_y += this->_speed * get_rand_direction();
 }
 // wolfs
 //---------------------- ground
@@ -122,15 +138,7 @@ void ground::add_animal(unsigned n_sheep, unsigned n_wolf)
     //     auto it = sheep(window_surface_ptr_);
     //     sheeps.push_back(it);
     // }
-    // _sheeps = std::make_unique<sheep[]>(n_sheep);
-    // _wolfs = std::make_unique<wolf[]>(n_wolf);
 }
-// ground::~ground()
-// {
-//     SDL_FreeSurface(window_surface_ptr_);
-//     window_surface_ptr_ = NULL;
-// }
-
 void ground::draw()
 {
     auto dst_rect = SDL_Rect{ 0, 0, (int)application_h, (int)application_w };
@@ -145,12 +153,10 @@ void ground::update()
 {
     sheep_->move();
     draw();
-    // sheep_->draw();
 }
 
 // application
 application::application(unsigned n_sheep, unsigned n_wolf)
-// : _ground(window_surface_ptr_)
 {
     window_ptr_ = SDL_CreateWindow("SDL2 Window", SDL_WINDOWPOS_CENTERED,
                                    SDL_WINDOWPOS_CENTERED, application_w,

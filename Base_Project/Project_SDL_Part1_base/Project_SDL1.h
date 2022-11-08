@@ -31,10 +31,10 @@ private:
     SDL_Surface *image_ptr_; // The texture of the sheep (the loaded image), use
                              // load_surface_for
     // todo: Attribute(s) to define its position
-    size_t a_width = 55;
-    size_t a_height = 55;
 
 protected:
+    size_t a_width;
+    size_t a_height;
     size_t _pos_x;
     size_t _pos_y;
     size_t _speed;
