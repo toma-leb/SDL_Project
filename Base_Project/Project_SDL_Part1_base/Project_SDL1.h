@@ -97,13 +97,13 @@ private:
     unsigned application_w = 1200;
     unsigned _n_sheep;
     unsigned _n_wolf;
+    std::unique_ptr<sheep> sheep_;
     // std::vector<sheep> sheeps;
     // std::unique_ptr<sheep[]> _sheeps;
     // std::unique_ptr<wolf[]> _wolfs;
     // here
 
 public:
-    std::unique_ptr<sheep> sheep_;
     // ground() = default;
     ground(SDL_Surface *); // Ctor
     ~ground(){}; // Dtor, again for clean up (if necessary)

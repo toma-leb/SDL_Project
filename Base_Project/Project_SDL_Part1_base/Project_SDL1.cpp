@@ -58,6 +58,13 @@ namespace
 
         return random_variable;
     };
+
+    void wait_until_next_second()
+    {
+        time_t before = time(0);
+        while (difftime(time(0), before) < 1)
+            ;
+    }
 } // namespace
 
 // animal
@@ -70,11 +77,12 @@ animal::~animal()
 {
     SDL_FreeSurface(image_ptr_);
     image_ptr_ = NULL;
-    std::cout << " An animal died" << std::endl;
+    // std::cout << " An animal died" << std::endl;
 }
 void animal::draw()
 {
-    auto dst_rect = SDL_Rect{ 0, 0, (int)a_height, (int)a_width };
+    auto dst_rect =
+        SDL_Rect{ (int)_pos_x, (int)_pos_y, (int)a_height, (int)a_width };
 
     if (SDL_BlitSurface(image_ptr_, NULL, window_surface_ptr_, &dst_rect))
         throw std::runtime_error("Could not apply texture.");
@@ -94,8 +102,9 @@ sheep::~sheep()
 
 void sheep::move()
 {
-    this->_pos_x += this->_speed * get_rand_direction();
-    this->_pos_y += this->_speed * get_rand_direction();
+    // double delta_time = 1.0 / 60.0; // 60 FPS
+    this->_pos_x += this->_speed ;
+    this->_pos_y += this->_speed ;
 }
 // wolfs
 //---------------------- ground
@@ -133,7 +142,11 @@ void ground::draw()
     sheep_->draw();
 }
 void ground::update()
-{}
+{
+    sheep_->move();
+    draw();
+    // sheep_->draw();
+}
 
 // application
 application::application(unsigned n_sheep, unsigned n_wolf)
@@ -179,11 +192,10 @@ int application::loop(unsigned period)
     // if (SDL_BlitSurface(surf, NULL, window_surface_ptr_, &dst_rect))
     //     throw std::runtime_error("Could not apply texture.");
     _ground->draw();
-    // _ground->sheep_->draw();
-
-    SDL_UpdateWindowSurface(window_ptr_);
 
     while (!quit && (SDL_GetTicks() - lastUpdateTime < period * 1000))
+    {
+        // wait_until_next_second();
         while (SDL_PollEvent(&window_event_))
         {
             if (window_event_.type == SDL_QUIT)
@@ -192,6 +204,10 @@ int application::loop(unsigned period)
                 break;
             }
         }
+        _ground->update();
+        SDL_UpdateWindowSurface(window_ptr_);
+    }
+
     // SDL_FreeSurface(surf);
     return 0;
 }
