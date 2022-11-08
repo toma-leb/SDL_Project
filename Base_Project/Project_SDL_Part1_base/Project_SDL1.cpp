@@ -75,6 +75,7 @@ animal::~animal()
 void animal::draw()
 {
     auto dst_rect = SDL_Rect{ 0, 0, (int)a_height, (int)a_width };
+
     if (SDL_BlitSurface(image_ptr_, NULL, window_surface_ptr_, &dst_rect))
         throw std::runtime_error("Could not apply texture.");
 }
@@ -106,6 +107,12 @@ void ground::add_animal(unsigned n_sheep, unsigned n_wolf)
 {
     this->_n_sheep = n_sheep;
     this->_n_wolf = n_wolf;
+    sheep_ = std::make_unique<sheep>(window_surface_ptr_);
+    // for(unsigned i = 0; i <n_sheep;i++)
+    // {
+    //     auto it = sheep(window_surface_ptr_);
+    //     sheeps.push_back(it);
+    // }
     // _sheeps = std::make_unique<sheep[]>(n_sheep);
     // _wolfs = std::make_unique<wolf[]>(n_wolf);
 }
@@ -115,7 +122,7 @@ void ground::add_animal(unsigned n_sheep, unsigned n_wolf)
 //     window_surface_ptr_ = NULL;
 // }
 
-void ground::draw(SDL_Surface *window_surface_ptr_)
+void ground::draw()
 {
     auto dst_rect = SDL_Rect{ 0, 0, (int)application_h, (int)application_w };
 
@@ -123,6 +130,7 @@ void ground::draw(SDL_Surface *window_surface_ptr_)
 
     if (SDL_BlitSurface(surf, NULL, window_surface_ptr_, &dst_rect))
         throw std::runtime_error("Could not apply texture.");
+    sheep_->draw();
 }
 void ground::update()
 {}
@@ -142,6 +150,7 @@ application::application(unsigned n_sheep, unsigned n_wolf)
 
     if (!window_surface_ptr_)
         throw std::runtime_error(std::string(SDL_GetError()));
+
     _ground = std::make_unique<ground>(window_surface_ptr_);
     // this->_ground = ground(window_surface_ptr_);
     _ground->add_animal(n_sheep, n_wolf);
@@ -169,7 +178,8 @@ int application::loop(unsigned period)
 
     // if (SDL_BlitSurface(surf, NULL, window_surface_ptr_, &dst_rect))
     //     throw std::runtime_error("Could not apply texture.");
-    _ground->draw(window_surface_ptr_);
+    _ground->draw();
+    // _ground->sheep_->draw();
 
     SDL_UpdateWindowSurface(window_ptr_);
 

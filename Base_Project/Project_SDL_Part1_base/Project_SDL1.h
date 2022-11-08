@@ -97,15 +97,17 @@ private:
     unsigned application_w = 1200;
     unsigned _n_sheep;
     unsigned _n_wolf;
+    // std::vector<sheep> sheeps;
     // std::unique_ptr<sheep[]> _sheeps;
     // std::unique_ptr<wolf[]> _wolfs;
     // here
 
 public:
+    std::unique_ptr<sheep> sheep_;
     // ground() = default;
     ground(SDL_Surface *); // Ctor
     ~ground(){}; // Dtor, again for clean up (if necessary)
-    void draw(SDL_Surface *window_surface_ptr_);
+    void draw();
     void add_animal(unsigned n_sheep, unsigned n_wolf); // todo: Add an animal
     void update(); // todo: "refresh the screen": Move animals and draw them
     // Possibly other methods, depends on your implementation
