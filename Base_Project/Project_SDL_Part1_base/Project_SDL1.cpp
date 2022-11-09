@@ -50,15 +50,6 @@ namespace
         SDL_FreeSurface(surf);
         return op_surface_ptr;
     }
-    int get_rand_direction() // get random direction -1,0,1
-    {
-        std::srand(std::time(nullptr));
-        // use current time as seed for random generator
-        int random_variable = std::rand();
-
-        return random_variable;
-    };
-
     void wait_until_next_second()
     {
         time_t before = time(0);
@@ -92,8 +83,9 @@ sheep::sheep(SDL_Surface *window_surface_ptr)
 {
     this->a_height = 55;
     this->a_width = 55;
-    this->_pos_x = 50; // right  || left
-    this->_pos_y = 50; // up || down
+
+    this->_pos_x = std::rand() % 50; // right  || left
+    this->_pos_y = std::rand() % 50; // up || down
     this->_speed = 5; // it's just the speed of the sheep
 }
 sheep::~sheep()
@@ -101,16 +93,18 @@ sheep::~sheep()
     std::cout << " A sheep died" << std::endl;
 }
 
-void sheep::move() // TODO
+void sheep::move()
 {
-    _pos_x += _speed * (get_rand_direction() % 3 - 1);
-    _pos_y += _speed * (get_rand_direction() % 3 - 1);
+    std::srand(std::time(nullptr));
+
+    _pos_x += _speed * (std::rand() % 3 - 1);
+    _pos_y += _speed * ((std::rand() * 2) % 3 - 1);
 
     while (_pos_x + a_width > 1200 || _pos_x < 0 || _pos_y < 0
            || _pos_y + a_height > 800)
     {
-        _pos_x += _speed * (get_rand_direction() % 3 - 1);
-        _pos_y += _speed * (get_rand_direction() % 3 - 1);
+        _pos_x += _speed * (std::rand() % 3 - 1);
+        _pos_y += _speed * ((std::rand() * 2) % 3 - 1);
     }
 
     // if (this->_pos_x + a_width > 1200)
@@ -137,12 +131,14 @@ void ground::add_animal(unsigned n_sheep, unsigned n_wolf)
 {
     this->_n_sheep = n_sheep;
     this->_n_wolf = n_wolf;
-    sheep_ = std::make_unique<sheep>(window_surface_ptr_);
-    // for(unsigned i = 0; i <n_sheep;i++)
-    // {
-    //     auto it = sheep(window_surface_ptr_);
-    //     sheeps.push_back(it);
-    // }
+    // sheep_ = std::make_unique<sheep>(window_surface_ptr_);
+    // _sheeps= std::make_unique<sheep[]>(n_sheep);
+    sheeps.resize(_n_sheep);
+    for (unsigned i = 0; i < _n_sheep; i++)
+    {
+        // auto it = sheep(window_surface_ptr_);
+        sheeps[i] = std::make_unique<sheep>(window_surface_ptr_);
+    }
 }
 void ground::draw()
 {
@@ -152,11 +148,19 @@ void ground::draw()
 
     if (SDL_BlitSurface(surf, NULL, window_surface_ptr_, &dst_rect))
         throw std::runtime_error("Could not apply texture.");
-    sheep_->draw();
+
+    for (unsigned i = 0; i < _n_sheep; i++)
+    {
+        sheeps[i]->draw();
+    }
 }
 void ground::update()
 {
-    sheep_->move();
+    // sheep_->move();
+    // for (unsigned i = 0; i < _n_sheep; i++)
+    // {
+    //     sheeps[i]->move();
+    // }
     draw();
 }
 
