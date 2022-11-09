@@ -35,9 +35,9 @@ private:
 protected:
     size_t a_width;
     size_t a_height;
-    size_t _pos_x;
-    size_t _pos_y;
-    size_t _speed;
+    int _pos_x;
+    int _pos_y;
+    int _speed;
 
 public:
     animal(const std::string &file_path, SDL_Surface *window_surface_ptr);
@@ -61,7 +61,7 @@ class sheep : public animal
 {
     // todo
     const std::string file_path = "../../media/sheep.png";
-
+    bool right = true;
     // Ctor
 public:
     sheep(SDL_Surface *window_surface_ptr);

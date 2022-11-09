@@ -18,7 +18,7 @@ sleep 2
 # fi
 cd $PRO
 
-./SDL_part1 1 2 10
+./SDL_part1 1 2 15
 # chmod +x $auto_test
 
 

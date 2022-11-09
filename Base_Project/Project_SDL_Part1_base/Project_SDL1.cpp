@@ -81,8 +81,7 @@ animal::~animal()
 }
 void animal::draw()
 {
-    auto dst_rect =
-        SDL_Rect{ (int)_pos_x, (int)_pos_y, (int)a_height, (int)a_width };
+    auto dst_rect = SDL_Rect{ _pos_x, _pos_y, (int)a_height, (int)a_width };
 
     if (SDL_BlitSurface(image_ptr_, NULL, window_surface_ptr_, &dst_rect))
         throw std::runtime_error("Could not apply texture.");
@@ -102,23 +101,17 @@ sheep::~sheep()
     std::cout << " A sheep died" << std::endl;
 }
 
-void sheep::move() //TODO
-
+void sheep::move() // TODO
 {
-    // double delta_time = 1.0 / 60.0; // 60 FPS
-    bool right = true;
-    while (true)
-    {
-        _pos_x += right ? _speed : _speed*-1;
-        std::cout << right << _pos_x << std::endl; 
+    if (this->_pos_x + a_width > 1200)
+        right = false;
+    else if (this->_pos_x < 0)
+        right = true;
+    _pos_x += right ? _speed : _speed * -1;
+    std::cout << right << _pos_x << std::endl;
 
-        if (this->_pos_x + a_width < 1200 && this->_pos_x > 0)
-            break;
-        else if (this->_pos_x + a_width > 1200)
-            right = false;
-        else if(this->_pos_x < 0)
-            right = true;
-    }
+    // if (this->_pos_x + a_width < 1200 && this->_pos_x > 0)
+    //     return;
 
     // this->_pos_y += this->_speed * get_rand_direction();
 }
