@@ -54,7 +54,7 @@ namespace
     {
         std::srand(std::time(nullptr));
         // use current time as seed for random generator
-        int random_variable = std::rand() % 2 - 1;
+        int random_variable = std::rand();
 
         return random_variable;
     };
@@ -62,7 +62,7 @@ namespace
     void wait_until_next_second()
     {
         time_t before = time(0);
-        while (difftime(time(0), before) < 0.5)
+        while (difftime(time(0), before) < 1)
             ;
     }
 } // namespace
@@ -103,17 +103,29 @@ sheep::~sheep()
 
 void sheep::move() // TODO
 {
-    if (this->_pos_x + a_width > 1200)
-        right = false;
-    else if (this->_pos_x < 0)
-        right = true;
-    _pos_x += right ? _speed : _speed * -1;
-    std::cout << right << _pos_x << std::endl;
+    _pos_x += _speed * (get_rand_direction() % 3 - 1);
+    _pos_y += _speed * (get_rand_direction() % 3 - 1);
 
-    // if (this->_pos_x + a_width < 1200 && this->_pos_x > 0)
-    //     return;
+    while (_pos_x + a_width > 1200 || _pos_x < 0 || _pos_y < 0
+           || _pos_y + a_height > 800)
+    {
+        _pos_x += _speed * (get_rand_direction() % 3 - 1);
+        _pos_y += _speed * (get_rand_direction() % 3 - 1);
+    }
 
-    // this->_pos_y += this->_speed * get_rand_direction();
+    // if (this->_pos_x + a_width > 1200)
+    //     right = false;
+    // else if (this->_pos_x < 0)
+    //     right = true;
+    // _pos_x += right ? _speed : _speed * -1;
+
+    // if (this->_pos_y + a_height > 800)
+    //     down = false;
+    // else if (this->_pos_y < 0)
+    //     down = true;
+    // _pos_y += down ? _speed : _speed * -1;
+    // std::cout << right << _pos_x << std::endl;
+    // std::cout << get_rand_direction() << std::endl;
 }
 // wolfs
 //---------------------- ground
@@ -181,15 +193,6 @@ int application::loop(unsigned period)
 {
     auto lastUpdateTime = SDL_GetTicks();
     bool quit = false;
-
-    // auto src_rect = SDL_Rect{ 0, 0, (int)application_h, (int)application_w };
-    // auto dst_rect = SDL_Rect{ 0, 0, (int)application_h, (int)application_w };
-
-    // auto surf = load_surface_for("../../media/farm.png",
-    // window_surface_ptr_);
-
-    // if (SDL_BlitSurface(surf, NULL, window_surface_ptr_, &dst_rect))
-    //     throw std::runtime_error("Could not apply texture.");
     _ground->draw();
 
     while (!quit && (SDL_GetTicks() - lastUpdateTime < period * 1000))

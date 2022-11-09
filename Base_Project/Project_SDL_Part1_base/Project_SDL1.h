@@ -61,7 +61,6 @@ class sheep : public animal
 {
     // todo
     const std::string file_path = "../../media/sheep.png";
-    bool right = true;
     // Ctor
 public:
     sheep(SDL_Surface *window_surface_ptr);
