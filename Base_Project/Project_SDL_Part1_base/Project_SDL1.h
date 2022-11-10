@@ -59,8 +59,9 @@ public:
 // class sheep, derived from animal
 class sheep : public animal
 {
-    // todo
-    const std::string file_path = "../../media/sheep.png";
+    // const std::string file_path = "../../media/sheep.png";
+    bool right = true;
+    bool down = true;
     // Ctor
 public:
     sheep(SDL_Surface *window_surface_ptr);
@@ -75,9 +76,16 @@ public:
 class wolf : public animal
 {
     // todo
+    // const std::string file_path = "../../media/wolf.png";
+    bool right = false;
+    bool down = false;
     // Ctor
+public:
+    wolf(SDL_Surface *window_surface_ptr);
     // Dtor
+    virtual ~wolf() override;
     // implement functions that are purely virtual in base class
+    virtual void move() override;
 };
 // Use only sheep at first. Once the application works
 // for sheep you can add the wolves
@@ -89,19 +97,15 @@ class ground
 private:
     // Attention, NON-OWNING ptr, again to the screen
     SDL_Surface *window_surface_ptr_;
-    const std::string file_path = "../../media/farm.png";
+    // const std::string file_path = "../../media/farm.png";
 
     // Some attribute to store all the wolves and sheep
     unsigned application_h = 800;
     unsigned application_w = 1200;
     unsigned _n_sheep;
     unsigned _n_wolf;
-
-    // std::unique_ptr<sheep> sheep_;
-    // std::vector<sheep> sheeps;
     std::vector<std::unique_ptr<sheep>> sheeps;
-    // std::unique_ptr<sheep[]> _sheeps;
-    // std::unique_ptr<wolf[]> _wolfs;
+    std::vector<std::unique_ptr<wolf>> wolfs;
     // here
 
 public:

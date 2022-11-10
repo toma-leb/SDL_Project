@@ -95,33 +95,78 @@ sheep::~sheep()
 
 void sheep::move()
 {
-    std::srand(std::time(nullptr));
+    // std::srand(std::time(nullptr));
 
-    _pos_x += _speed * (std::rand() % 3 - 1);
-    _pos_y += _speed * ((std::rand() * 2) % 3 - 1);
+    // _pos_x += _speed * (std::rand() % 3 - 1);
+    // _pos_y += _speed * ((std::rand() * 2) % 3 - 1);
 
-    while (_pos_x + a_width > 1200 || _pos_x < 0 || _pos_y < 0
-           || _pos_y + a_height > 800)
-    {
-        _pos_x += _speed * (std::rand() % 3 - 1);
-        _pos_y += _speed * ((std::rand() * 2) % 3 - 1);
-    }
+    // while (_pos_x + a_width > 1200 || _pos_x < 0 || _pos_y < 0
+    //        || _pos_y + a_height > 800)
+    // {
+    //     _pos_x += _speed * (std::rand() % 3 - 1);
+    //     _pos_y += _speed * ((std::rand() * 2) % 3 - 1);
+    // }
 
-    // if (this->_pos_x + a_width > 1200)
-    //     right = false;
-    // else if (this->_pos_x < 0)
-    //     right = true;
-    // _pos_x += right ? _speed : _speed * -1;
+    if (this->_pos_x + a_width > 1200)
+        right = false;
+    else if (this->_pos_x < 0)
+        right = true;
+    _pos_x += right ? _speed : _speed * -1;
 
-    // if (this->_pos_y + a_height > 800)
-    //     down = false;
-    // else if (this->_pos_y < 0)
-    //     down = true;
-    // _pos_y += down ? _speed : _speed * -1;
+    if (this->_pos_y + a_height > 800)
+        down = false;
+    else if (this->_pos_y < 0)
+        down = true;
+    _pos_y += down ? _speed : _speed * -1;
     // std::cout << right << _pos_x << std::endl;
     // std::cout << get_rand_direction() << std::endl;
 }
 // wolfs
+
+wolf::wolf(SDL_Surface *window_surface_ptr)
+    : animal("../../media/wolf.png", window_surface_ptr)
+{
+    this->a_height = 42;
+    this->a_width = 62;
+
+    this->_pos_x = std::rand() % 40 + 60; // right  || left
+    this->_pos_y = std::rand() % 41 + 60; // up || down
+    this->_speed = 10; // it's just the speed of the sheep
+}
+wolf::~wolf()
+{
+    std::cout << " A wolf died" << std::endl;
+}
+
+void wolf::move()
+{
+    // std::srand(std::time(nullptr));
+
+    // _pos_x += _speed * (std::rand() % 3 - 1);
+    // _pos_y += _speed * ((std::rand() * 2) % 3 - 1);
+
+    // while (_pos_x + a_width > 1200 || _pos_x < 0 || _pos_y < 0
+    //        || _pos_y + a_height > 800)
+    // {
+    //     _pos_x += _speed * (std::rand() % 3 - 1);
+    //     _pos_y += _speed * ((std::rand() * 2) % 3 - 1);
+    // }
+
+    if (this->_pos_x + a_width > 1200)
+        right = false;
+    else if (this->_pos_x < 0)
+        right = true;
+    _pos_x += right ? _speed : _speed * -1;
+
+    if (this->_pos_y + a_height > 800)
+        down = false;
+    else if (this->_pos_y < 0)
+        down = true;
+    _pos_y += down ? _speed : _speed * -1;
+    // std::cout << right << _pos_x << std::endl;
+    // std::cout << get_rand_direction() << std::endl;
+}
+
 //---------------------- ground
 ground::ground(SDL_Surface *window_surface_ptr)
 {
@@ -129,16 +174,14 @@ ground::ground(SDL_Surface *window_surface_ptr)
 }
 void ground::add_animal(unsigned n_sheep, unsigned n_wolf)
 {
-    this->_n_sheep = n_sheep;
-    this->_n_wolf = n_wolf;
-    // sheep_ = std::make_unique<sheep>(window_surface_ptr_);
-    // _sheeps= std::make_unique<sheep[]>(n_sheep);
+    _n_sheep = n_sheep;
+    _n_wolf = n_wolf;
     sheeps.resize(_n_sheep);
     for (unsigned i = 0; i < _n_sheep; i++)
-    {
-        // auto it = sheep(window_surface_ptr_);
         sheeps[i] = std::make_unique<sheep>(window_surface_ptr_);
-    }
+    wolfs.resize(_n_wolf);
+    for (unsigned i = 0; i < _n_wolf; i++)
+        wolfs[i] = std::make_unique<wolf>(window_surface_ptr_);
 }
 void ground::draw()
 {
@@ -150,17 +193,17 @@ void ground::draw()
         throw std::runtime_error("Could not apply texture.");
 
     for (unsigned i = 0; i < _n_sheep; i++)
-    {
         sheeps[i]->draw();
-    }
+    for (unsigned i = 0; i < _n_wolf; i++)
+        wolfs[i]->draw();
 }
 void ground::update()
 {
     // sheep_->move();
-    // for (unsigned i = 0; i < _n_sheep; i++)
-    // {
-    //     sheeps[i]->move();
-    // }
+    for (unsigned i = 0; i < _n_sheep; i++)
+        sheeps[i]->move();
+    for (unsigned i = 0; i < _n_wolf; i++)
+        wolfs[i]->move();
     draw();
 }
 
