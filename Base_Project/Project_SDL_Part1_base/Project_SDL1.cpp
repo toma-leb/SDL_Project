@@ -56,6 +56,46 @@ namespace
         while (difftime(time(0), before) < 1)
             ;
     }
+
+    int get_ran_pos_x(int pos_x, int speed, int a_width)
+    {
+        size_t window_width = 1200;
+        int rand_dir = std::rand() % 2;
+        switch (rand_dir)
+        {
+        case 0: // go right
+            if (pos_x + a_width + speed < window_width)
+                pos_x += speed;
+            break;
+        case 1: // go left
+            if (pos_x - speed > 0)
+                pos_x -= speed;
+            break;
+        default: // go nowhere
+            break;
+        }
+        return pos_x;
+    }
+
+    int get_ran_pos_y(int pos_y, int speed, int a_height)
+    {
+        size_t window_length = 800;
+        int rand_dir = std::rand() % 2;
+        switch (rand_dir)
+        {
+        case 0: // go up
+            if (pos_y - speed > 0)
+                pos_y -= speed;
+            break;
+        case 1: // go down
+            if (pos_y + speed + a_height < window_length)
+                pos_y += speed;
+            break;
+        default: // go nowhere
+            break;
+        }
+        return pos_y;
+    }
 } // namespace
 
 // animal
@@ -84,8 +124,8 @@ sheep::sheep(SDL_Surface *window_surface_ptr)
     this->a_height = 55;
     this->a_width = 55;
 
-    this->_pos_x = std::rand() % 50; // right  || left
-    this->_pos_y = std::rand() % 50; // up || down
+    this->_pos_x = std::rand() % 50 + 300; // right  || left
+    this->_pos_y = std::rand() % 50 + 200; // up || down
     this->_speed = 5; // it's just the speed of the sheep
 }
 sheep::~sheep()
@@ -95,33 +135,22 @@ sheep::~sheep()
 
 void sheep::move()
 {
-    // std::srand(std::time(nullptr));
+    _pos_x = get_ran_pos_x(_pos_x, _speed, a_width);
+    _pos_y = get_ran_pos_y(_pos_y, _speed, a_height);
 
-    // _pos_x += _speed * (std::rand() % 3 - 1);
-    // _pos_y += _speed * ((std::rand() * 2) % 3 - 1);
+    // if (this->_pos_x + a_width > 1200)
+    //     right = false;
+    // else if (this->_pos_x < 0)
+    //     right = true;
+    // _pos_x += right ? _speed : _speed * -1;
 
-    // while (_pos_x + a_width > 1200 || _pos_x < 0 || _pos_y < 0
-    //        || _pos_y + a_height > 800)
-    // {
-    //     _pos_x += _speed * (std::rand() % 3 - 1);
-    //     _pos_y += _speed * ((std::rand() * 2) % 3 - 1);
-    // }
-
-    if (this->_pos_x + a_width > 1200)
-        right = false;
-    else if (this->_pos_x < 0)
-        right = true;
-    _pos_x += right ? _speed : _speed * -1;
-
-    if (this->_pos_y + a_height > 800)
-        down = false;
-    else if (this->_pos_y < 0)
-        down = true;
-    _pos_y += down ? _speed : _speed * -1;
+    // if (this->_pos_y + a_height > 800)
+    //     down = false;
+    // else if (this->_pos_y < 0)
+    //     down = true;
+    // _pos_y += down ? _speed : _speed * -1;
     // std::cout << right << _pos_x << std::endl;
-    // std::cout << get_rand_direction() << std::endl;
-}
-// wolfs
+} // wolfs
 
 wolf::wolf(SDL_Surface *window_surface_ptr)
     : animal("../../media/wolf.png", window_surface_ptr)
@@ -129,8 +158,8 @@ wolf::wolf(SDL_Surface *window_surface_ptr)
     this->a_height = 42;
     this->a_width = 62;
 
-    this->_pos_x = std::rand() % 40 + 60; // right  || left
-    this->_pos_y = std::rand() % 41 + 60; // up || down
+    this->_pos_x = std::rand() % 10 + 1000; // right  || left
+    this->_pos_y = std::rand() % 10 + 400; // up || down
     this->_speed = 10; // it's just the speed of the sheep
 }
 wolf::~wolf()
@@ -140,31 +169,19 @@ wolf::~wolf()
 
 void wolf::move()
 {
-    // std::srand(std::time(nullptr));
+    _pos_x = get_ran_pos_x(_pos_x, _speed, a_width);
+    _pos_y = get_ran_pos_y(_pos_y, _speed, a_height);
+    // if (this->_pos_x + a_width > 1200)
+    //     right = false;
+    // else if (this->_pos_x < 0)
+    //     right = true;
+    // _pos_x += right ? _speed : _speed * -1;
 
-    // _pos_x += _speed * (std::rand() % 3 - 1);
-    // _pos_y += _speed * ((std::rand() * 2) % 3 - 1);
-
-    // while (_pos_x + a_width > 1200 || _pos_x < 0 || _pos_y < 0
-    //        || _pos_y + a_height > 800)
-    // {
-    //     _pos_x += _speed * (std::rand() % 3 - 1);
-    //     _pos_y += _speed * ((std::rand() * 2) % 3 - 1);
-    // }
-
-    if (this->_pos_x + a_width > 1200)
-        right = false;
-    else if (this->_pos_x < 0)
-        right = true;
-    _pos_x += right ? _speed : _speed * -1;
-
-    if (this->_pos_y + a_height > 800)
-        down = false;
-    else if (this->_pos_y < 0)
-        down = true;
-    _pos_y += down ? _speed : _speed * -1;
-    // std::cout << right << _pos_x << std::endl;
-    // std::cout << get_rand_direction() << std::endl;
+    // if (this->_pos_y + a_height > 800)
+    //     down = false;
+    // else if (this->_pos_y < 0)
+    //     down = true;
+    // _pos_y += down ? _speed : _speed * -1;
 }
 
 //---------------------- ground
@@ -185,6 +202,8 @@ void ground::add_animal(unsigned n_sheep, unsigned n_wolf)
 }
 void ground::draw()
 {
+    std::srand(std::time(nullptr));
+
     auto dst_rect = SDL_Rect{ 0, 0, (int)application_h, (int)application_w };
 
     auto surf = load_surface_for("../../media/farm.png", window_surface_ptr_);
@@ -223,7 +242,6 @@ application::application(unsigned n_sheep, unsigned n_wolf)
         throw std::runtime_error(std::string(SDL_GetError()));
 
     _ground = std::make_unique<ground>(window_surface_ptr_);
-    // this->_ground = ground(window_surface_ptr_);
     _ground->add_animal(n_sheep, n_wolf);
 }
 
