@@ -257,7 +257,9 @@ application::~application()
 int application::loop(unsigned period)
 {
     auto lastUpdateTime = SDL_GetTicks();
+    
     bool quit = false;
+
     _ground->draw();
 
     while (!quit && (SDL_GetTicks() - lastUpdateTime < period * 1000))
