@@ -5,11 +5,13 @@
 
 #include <algorithm>
 #include <cassert>
+#include <cmath>
 #include <cstdlib>
 #include <ctime>
 #include <numeric>
 #include <random>
 #include <string>
+#define PI 3.14159265
 
 void init()
 {
@@ -135,21 +137,17 @@ sheep::~sheep()
 
 void sheep::move()
 {
-    _pos_x = get_ran_pos_x(_pos_x, _speed, a_width);
+    if (_pos_x + a_width == 0)
+        _pos_x -= _speed;
+    else if (_pos_x + a_width == 1200)
+        _pos_x += _speed;
+    else
+        _pos_x = get_ran_pos_x(_pos_x, _speed, a_width);
+    if (_pos_y == 0)
+        _pos_y -= _speed;
+    else if (_pos_y + a_height == 800)
+        _pos_y += _speed;
     _pos_y = get_ran_pos_y(_pos_y, _speed, a_height);
-
-    // if (this->_pos_x + a_width > 1200)
-    //     right = false;
-    // else if (this->_pos_x < 0)
-    //     right = true;
-    // _pos_x += right ? _speed : _speed * -1;
-
-    // if (this->_pos_y + a_height > 800)
-    //     down = false;
-    // else if (this->_pos_y < 0)
-    //     down = true;
-    // _pos_y += down ? _speed : _speed * -1;
-    // std::cout << right << _pos_x << std::endl;
 } // wolfs
 
 wolf::wolf(SDL_Surface *window_surface_ptr)
@@ -171,19 +169,18 @@ void wolf::move()
 {
     _pos_x = get_ran_pos_x(_pos_x, _speed, a_width);
     _pos_y = get_ran_pos_y(_pos_y, _speed, a_height);
-    // if (this->_pos_x + a_width > 1200)
-    //     right = false;
-    // else if (this->_pos_x < 0)
-    //     right = true;
-    // _pos_x += right ? _speed : _speed * -1;
-
-    // if (this->_pos_y + a_height > 800)
-    //     down = false;
-    // else if (this->_pos_y < 0)
-    //     down = true;
-    // _pos_y += down ? _speed : _speed * -1;
 }
-
+void wolf::hunting_move(int sheep_x,int sheep_y)
+{
+    // if (sheeps.size() != 0)
+    // {
+        int xdiff = this->_pos_x - sheep_x;
+        int ydiff = this->_pos_y - sheep_y;
+        float angle = atan2(ydiff, xdiff) * (180 / PI);
+        this->_pos_x += this->_speed * cos(angle);
+        this->_pos_y += this->_speed * sin(angle);
+    // }
+}
 //---------------------- ground
 ground::ground(SDL_Surface *window_surface_ptr)
 {
@@ -222,7 +219,7 @@ void ground::update()
     for (unsigned i = 0; i < _n_sheep; i++)
         sheeps[i]->move();
     for (unsigned i = 0; i < _n_wolf; i++)
-        wolfs[i]->move();
+        wolfs[i]->hunting_move(sheeps[0]->_pos_x, sheeps[0]->_pos_y);
     draw();
 }
 
@@ -257,7 +254,7 @@ application::~application()
 int application::loop(unsigned period)
 {
     auto lastUpdateTime = SDL_GetTicks();
-    
+
     bool quit = false;
 
     _ground->draw();

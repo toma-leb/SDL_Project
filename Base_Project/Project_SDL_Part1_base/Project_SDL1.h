@@ -10,6 +10,8 @@
 #include <memory>
 #include <optional>
 #include <vector>
+#include <cmath>
+
 
 // Defintions
 constexpr double frame_rate = 60.0; // refresh rate
@@ -35,11 +37,12 @@ private:
 protected:
     size_t a_width;
     size_t a_height;
-    int _pos_x;
-    int _pos_y;
+
     int _speed;
 
 public:
+    int _pos_x;
+    int _pos_y;
     animal(const std::string &file_path, SDL_Surface *window_surface_ptr);
     // todo: The constructor has to load the sdl_surface that corresponds to the
     // texture
@@ -75,13 +78,13 @@ public:
 // class wolf, derived from animal
 class wolf : public animal
 {
-    // todo
     // const std::string file_path = "../../media/wolf.png";
     bool right = false;
     bool down = false;
     // Ctor
 public:
     wolf(SDL_Surface *window_surface_ptr);
+    void hunting_move(int sheep_x,int sheep_y);
     // Dtor
     virtual ~wolf() override;
     // implement functions that are purely virtual in base class
