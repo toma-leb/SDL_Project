@@ -52,13 +52,6 @@ namespace
         SDL_FreeSurface(surf);
         return op_surface_ptr;
     }
-    void wait_until_next_second()
-    {
-        time_t before = time(0);
-        while (difftime(time(0), before) < 1)
-            ;
-    }
-
     int get_ran_pos_x(int pos_x, int speed, int a_width)
     {
         size_t window_width = 1200;
@@ -170,16 +163,13 @@ void wolf::move()
     _pos_x = get_ran_pos_x(_pos_x, _speed, a_width);
     _pos_y = get_ran_pos_y(_pos_y, _speed, a_height);
 }
-void wolf::hunting_move(int sheep_x,int sheep_y)
+void wolf::hunting_move(int sheep_x, int sheep_y)
 {
-    // if (sheeps.size() != 0)
-    // {
-        int xdiff = this->_pos_x - sheep_x;
-        int ydiff = this->_pos_y - sheep_y;
-        float angle = atan2(ydiff, xdiff) * (180 / PI);
-        this->_pos_x += this->_speed * cos(angle);
-        this->_pos_y += this->_speed * sin(angle);
-    // }
+    int xdiff = this->_pos_x - sheep_x;
+    int ydiff = this->_pos_y - sheep_y;
+    float angle = atan2(ydiff, xdiff) * (180 / PI);
+    this->_pos_x += this->_speed * cos(angle);
+    this->_pos_y += this->_speed * sin(angle);
 }
 //---------------------- ground
 ground::ground(SDL_Surface *window_surface_ptr)
@@ -253,15 +243,18 @@ application::~application()
 
 int application::loop(unsigned period)
 {
+    const int FPS = 60;
+    const int frameDelay = 1000 / FPS;
     auto lastUpdateTime = SDL_GetTicks();
-
+    Uint32 frameStart;
+    int frameTime;
     bool quit = false;
 
     _ground->draw();
 
     while (!quit && (SDL_GetTicks() - lastUpdateTime < period * 1000))
     {
-        // wait_until_next_second();
+        frameStart = SDL_GetTicks();
         while (SDL_PollEvent(&window_event_))
         {
             if (window_event_.type == SDL_QUIT)
@@ -270,6 +263,10 @@ int application::loop(unsigned period)
                 break;
             }
         }
+        frameTime = SDL_GetTicks() - frameStart;
+        if (frameDelay > frameTime)
+            SDL_Delay(frameDelay - frameTime);
+
         _ground->update();
         SDL_UpdateWindowSurface(window_ptr_);
     }
