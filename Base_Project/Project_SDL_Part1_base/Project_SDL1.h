@@ -5,13 +5,12 @@
 
 #include <SDL.h>
 #include <SDL_image.h>
+#include <cmath>
 #include <iostream>
 #include <map>
 #include <memory>
 #include <optional>
 #include <vector>
-#include <cmath>
-
 
 // Defintions
 constexpr double frame_rate = 60.0; // refresh rate
@@ -37,7 +36,6 @@ private:
 protected:
     size_t a_width;
     size_t a_height;
-
     int _speed;
 
 public:
@@ -62,9 +60,6 @@ public:
 // class sheep, derived from animal
 class sheep : public animal
 {
-    // const std::string file_path = "../../media/sheep.png";
-    bool right = true;
-    bool down = true;
     // Ctor
 public:
     sheep(SDL_Surface *window_surface_ptr);
@@ -74,25 +69,50 @@ public:
     virtual void move() override;
 };
 
-// Insert here:
+class shepherd_dog : public animal
+{
+    // Ctor
+    float cir_angle =0;
+public:
+    int distance_max = 25;
+    shepherd_dog(SDL_Surface *window_surface_ptr);
+    // Dtor
+    virtual ~shepherd_dog() override;
+    // implement functions that are purely virtual in base class
+    virtual void move() override;
+    void follow_shepherd_move(int shepherd_x, int shepherd_y);
+};
+
 // class wolf, derived from animal
 class wolf : public animal
 {
     // const std::string file_path = "../../media/wolf.png";
-    bool right = false;
-    bool down = false;
     // Ctor
 public:
     wolf(SDL_Surface *window_surface_ptr);
-    void hunting_move(int sheep_x,int sheep_y);
+    void hunting_move(int sheep_x, int sheep_y);
     // Dtor
     virtual ~wolf() override;
     // implement functions that are purely virtual in base class
     virtual void move() override;
 };
-// Use only sheep at first. Once the application works
-// for sheep you can add the wolves
+class shepherd
+{
+private:
+    // Attention, NON-OWNING ptr, again to the screen
+    SDL_Surface *window_surface_ptr_;
+    unsigned shepherd_h = 89;
+    unsigned shepherd_w = 60;
 
+public:
+    int _pos_x;
+    int _pos_y, _speed;
+    // ground() = default;
+    shepherd(SDL_Surface *); // Ctor
+    ~shepherd(); // Dtor, again for clean up (if necessary)
+    void draw();
+    void move(char direction);
+};
 // The "ground" on which all the animals live (like the std::vector
 // in the zoo example).
 class ground
@@ -103,15 +123,16 @@ private:
     // const std::string file_path = "../../media/farm.png";
 
     // Some attribute to store all the wolves and sheep
-    unsigned application_h = 800;
-    unsigned application_w = 1200;
     unsigned _n_sheep;
     unsigned _n_wolf;
     std::vector<std::unique_ptr<sheep>> sheeps;
     std::vector<std::unique_ptr<wolf>> wolfs;
+    std::unique_ptr<shepherd_dog> dog;
     // here
 
 public:
+    std::unique_ptr<shepherd> _shepherd; // TODO
+
     // ground() = default;
     ground(SDL_Surface *); // Ctor
     ~ground(){}; // Dtor, again for clean up (if necessary)
@@ -132,8 +153,8 @@ private:
 
     // Other attributes here, for example an instance of ground
     std::unique_ptr<ground> _ground; // TODO
-    unsigned application_h = 800;
-    unsigned application_w = 1200;
+    unsigned application_h = frame_height;
+    unsigned application_w = frame_width;
 
 public:
     application(unsigned n_sheep, unsigned n_wolf); // Ctor

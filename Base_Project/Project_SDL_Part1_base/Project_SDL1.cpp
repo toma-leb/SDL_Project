@@ -54,12 +54,11 @@ namespace
     }
     int get_ran_pos_x(int pos_x, int speed, int a_width)
     {
-        size_t window_width = 1200;
         int rand_dir = std::rand() % 2;
         switch (rand_dir)
         {
         case 0: // go right
-            if (pos_x + a_width + speed < window_width)
+            if (pos_x + a_width + speed < frame_width)
                 pos_x += speed;
             break;
         case 1: // go left
@@ -74,7 +73,6 @@ namespace
 
     int get_ran_pos_y(int pos_y, int speed, int a_height)
     {
-        size_t window_length = 800;
         int rand_dir = std::rand() % 2;
         switch (rand_dir)
         {
@@ -83,7 +81,7 @@ namespace
                 pos_y -= speed;
             break;
         case 1: // go down
-            if (pos_y + speed + a_height < window_length)
+            if (pos_y + speed + a_height < frame_height)
                 pos_y += speed;
             break;
         default: // go nowhere
@@ -103,7 +101,6 @@ animal::~animal()
 {
     SDL_FreeSurface(image_ptr_);
     image_ptr_ = NULL;
-    // std::cout << " An animal died" << std::endl;
 }
 void animal::draw()
 {
@@ -132,17 +129,59 @@ void sheep::move()
 {
     if (_pos_x + a_width == 0)
         _pos_x -= _speed;
-    else if (_pos_x + a_width == 1200)
+    else if (_pos_x + a_width == frame_width)
         _pos_x += _speed;
     else
         _pos_x = get_ran_pos_x(_pos_x, _speed, a_width);
     if (_pos_y == 0)
         _pos_y -= _speed;
-    else if (_pos_y + a_height == 800)
+    else if (_pos_y + a_height == frame_height)
         _pos_y += _speed;
     _pos_y = get_ran_pos_y(_pos_y, _speed, a_height);
 } // wolfs
 
+shepherd_dog::shepherd_dog(SDL_Surface *window_surface_ptr)
+    : animal("../../media/Shepherd_dog.png", window_surface_ptr)
+{
+    this->a_height = 46;
+    this->a_width = 60;
+
+    this->_pos_x = std::rand() % 10 + 300; // right  || left
+    this->_pos_y = std::rand() % 10 + 250; // up || down
+    this->_speed = 10; // it's just the speed of the sheep
+}
+shepherd_dog::~shepherd_dog()
+{
+    std::cout << " The shepherd_dog died" << std::endl;
+}
+void shepherd_dog::move()
+{
+    _pos_x = get_ran_pos_x(_pos_x, _speed, a_width);
+    _pos_y = get_ran_pos_y(_pos_y, _speed, a_height);
+} // wolfs
+void shepherd_dog::follow_shepherd_move(int shepherd_x, int shepherd_y)
+{
+    int xdiff = this->_pos_x - shepherd_x;
+    int ydiff = this->_pos_y - shepherd_y;
+    int distance = sqrt(xdiff * xdiff + ydiff * ydiff);
+    if (distance > distance_max) // dog is far away from the master
+    {
+        cir_angle = 0;
+        std::cout << distance << "\n";
+        float angle = atan2(ydiff, xdiff) * (180 / PI);
+        this->_pos_x += this->_speed * cos(angle);
+        this->_pos_y += this->_speed * sin(angle);
+    }
+    else
+    {
+        cir_angle += (30) * (PI / 180); // Convert to radians
+        std::cout << cir_angle << "\n";
+        this->_pos_x =
+            cos(cir_angle) * (xdiff)-sin(cir_angle) * (ydiff) + shepherd_x;
+        this->_pos_y =
+            sin(cir_angle) * (xdiff) + cos(cir_angle) * (ydiff) + shepherd_y;
+    }
+}
 wolf::wolf(SDL_Surface *window_surface_ptr)
     : animal("../../media/wolf.png", window_surface_ptr)
 {
@@ -171,10 +210,57 @@ void wolf::hunting_move(int sheep_x, int sheep_y)
     this->_pos_x += this->_speed * cos(angle);
     this->_pos_y += this->_speed * sin(angle);
 }
+//---------------------- human
+shepherd::shepherd(SDL_Surface *window_surface_ptr)
+{
+    window_surface_ptr_ = window_surface_ptr;
+    this->_pos_x = std::rand() % 10 + 100; // right  || left
+    this->_pos_y = std::rand() % 10 + 400; // up || down
+    this->_speed = 10; // it's just the speed of the sheep
+}
+shepherd::~shepherd()
+{
+    std::cout << " player died !!!" << std::endl;
+}
+void shepherd::draw()
+{
+    std::srand(std::time(nullptr));
+    auto dst_rect =
+        SDL_Rect{ _pos_x, _pos_y, (int)shepherd_h, (int)shepherd_w };
+
+    auto surf =
+        load_surface_for("../../media/Shepherd.png", window_surface_ptr_);
+
+    if (SDL_BlitSurface(surf, NULL, window_surface_ptr_, &dst_rect))
+        throw std::runtime_error("Could not apply texture.");
+}
+void shepherd::move(char direction) // TOTO: apply size
+{
+    switch (direction)
+    {
+    case 'u':
+        if (_pos_y - _speed > 0)
+            _pos_y -= _speed;
+        break;
+    case 'd':
+        if (_pos_y + shepherd_h + _speed < frame_height)
+            _pos_y += _speed;
+        break;
+    case 'l':
+        if (_pos_x - _speed > 0)
+            _pos_x -= _speed;
+        break;
+    case 'r':
+        if (_pos_x + shepherd_w + _speed <= frame_width)
+            _pos_x += _speed;
+        break;
+    }
+}
 //---------------------- ground
 ground::ground(SDL_Surface *window_surface_ptr)
 {
     window_surface_ptr_ = window_surface_ptr;
+    _shepherd = std::make_unique<shepherd>(window_surface_ptr_);
 }
 void ground::add_animal(unsigned n_sheep, unsigned n_wolf)
 {
@@ -186,12 +272,12 @@ void ground::add_animal(unsigned n_sheep, unsigned n_wolf)
     wolfs.resize(_n_wolf);
     for (unsigned i = 0; i < _n_wolf; i++)
         wolfs[i] = std::make_unique<wolf>(window_surface_ptr_);
+    dog = std::make_unique<shepherd_dog>(window_surface_ptr_);
 }
 void ground::draw()
 {
     std::srand(std::time(nullptr));
-
-    auto dst_rect = SDL_Rect{ 0, 0, (int)application_h, (int)application_w };
+    auto dst_rect = SDL_Rect{ 0, 0, (int)frame_height, (int)frame_width };
 
     auto surf = load_surface_for("../../media/farm.png", window_surface_ptr_);
 
@@ -202,6 +288,8 @@ void ground::draw()
         sheeps[i]->draw();
     for (unsigned i = 0; i < _n_wolf; i++)
         wolfs[i]->draw();
+    dog->draw();
+    _shepherd->draw();
 }
 void ground::update()
 {
@@ -210,6 +298,8 @@ void ground::update()
         sheeps[i]->move();
     for (unsigned i = 0; i < _n_wolf; i++)
         wolfs[i]->hunting_move(sheeps[0]->_pos_x, sheeps[0]->_pos_y);
+    // dog->move();
+    dog->follow_shepherd_move(_shepherd->_pos_x, _shepherd->_pos_y);
     draw();
 }
 
@@ -217,8 +307,8 @@ void ground::update()
 application::application(unsigned n_sheep, unsigned n_wolf)
 {
     window_ptr_ = SDL_CreateWindow("SDL2 Window", SDL_WINDOWPOS_CENTERED,
-                                   SDL_WINDOWPOS_CENTERED, application_w,
-                                   application_h, SDL_WINDOW_SHOWN);
+                                   SDL_WINDOWPOS_CENTERED, frame_width,
+                                   frame_height, SDL_WINDOW_SHOWN);
 
     if (!window_ptr_)
         throw std::runtime_error(std::string(SDL_GetError()));
@@ -243,30 +333,50 @@ application::~application()
 
 int application::loop(unsigned period)
 {
-    const int FPS = 60;
-    const int frameDelay = 1000 / FPS;
     auto lastUpdateTime = SDL_GetTicks();
     Uint32 frameStart;
-    int frameTime;
+    char direction;
     bool quit = false;
-
-    _ground->draw();
 
     while (!quit && (SDL_GetTicks() - lastUpdateTime < period * 1000))
     {
         frameStart = SDL_GetTicks();
+
         while (SDL_PollEvent(&window_event_))
         {
             if (window_event_.type == SDL_QUIT)
             {
                 quit = true;
                 break;
+            };
+            if (window_event_.type == SDL_KEYDOWN)
+            {
+                switch (window_event_.key.keysym.sym)
+                {
+                case SDLK_z:
+                    direction = 'u';
+                    break;
+                case SDLK_s:
+                    direction = 'd';
+                    break;
+                case SDLK_q:
+                    direction = 'l';
+                    break;
+                case SDLK_d:
+                    direction = 'r';
+                    break;
+                }
+            }
+            if (window_event_.type == SDL_KEYUP)
+            {
+                direction = 0;
             }
         }
-        frameTime = SDL_GetTicks() - frameStart;
-        if (frameDelay > frameTime)
-            SDL_Delay(frameDelay - frameTime);
-
+        // direction = 'u';
+        _ground->_shepherd->move(direction);
+        int frame_update = SDL_GetTicks() - frameStart;
+        if (frame_time > frame_update)
+            SDL_Delay(frame_time - frame_update);
         _ground->update();
         SDL_UpdateWindowSurface(window_ptr_);
     }
