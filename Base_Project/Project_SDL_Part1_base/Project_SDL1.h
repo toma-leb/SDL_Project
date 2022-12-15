@@ -23,7 +23,9 @@ constexpr unsigned frame_boundary = 100;
 
 // Helper function to initialize SDL
 void init();
+// class moving_object {
 
+// }
 class animal
 {
 private:
@@ -54,6 +56,9 @@ public:
 
     virtual void move(){}; // todo: Animals move around, but in a different
                            // fashion depending on which type of animal
+    virtual void interact(std::unique_ptr<animal> &ani){};
+    // todo: Animals interact around, but in a different
+    // fashion depending on which type of animal
 };
 
 // Insert here:
@@ -61,18 +66,22 @@ public:
 class sheep : public animal
 {
     // Ctor
+    char _genre;
+
 public:
     sheep(SDL_Surface *window_surface_ptr);
     // Dtor
     virtual ~sheep() override;
     // implement functions that are purely virtual in base class
     virtual void move() override;
+    virtual void interact(std::unique_ptr<animal> &ani) override;
 };
 
 class shepherd_dog : public animal
 {
     // Ctor
-    float cir_angle =0;
+    float cir_angle = 0;
+
 public:
     int distance_max = 25;
     shepherd_dog(SDL_Surface *window_surface_ptr);
@@ -88,13 +97,23 @@ class wolf : public animal
 {
     // const std::string file_path = "../../media/wolf.png";
     // Ctor
+    unsigned int dead_time = 2000;
+    int hunt_distance = 2000;
+    int eat_distance = 30;
+    int target_x = 0;
+    int target_y = 0;
+    int min_distance = 100;
+    int avoid_x = 0;
+    int avoid_y = 0;
+    bool run_away = false;
+
 public:
     wolf(SDL_Surface *window_surface_ptr);
-    void hunting_move(int sheep_x, int sheep_y);
     // Dtor
     virtual ~wolf() override;
     // implement functions that are purely virtual in base class
     virtual void move() override;
+    virtual void interact(std::unique_ptr<animal> &ani) override;
 };
 class shepherd
 {
@@ -125,9 +144,7 @@ private:
     // Some attribute to store all the wolves and sheep
     unsigned _n_sheep;
     unsigned _n_wolf;
-    std::vector<std::unique_ptr<sheep>> sheeps;
-    std::vector<std::unique_ptr<wolf>> wolfs;
-    std::unique_ptr<shepherd_dog> dog;
+    std::vector<std::unique_ptr<animal>> animals;
     // here
 
 public:
