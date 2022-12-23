@@ -22,46 +22,47 @@ constexpr unsigned frame_boundary = 100;
 
 // Helper function to initialize SDL
 void init();
-// class moving_object {
-
-// }
-class animal
+class moving_object
 {
 private:
-    SDL_Surface *window_surface_ptr_; // ptr to the surface on which we want the
-                                      // animal to be drawn, also non-owning
-    SDL_Surface *image_ptr_; // The texture of the sheep (the loaded image), use
-                             // load_surface_for
-    // todo: Attribute(s) to define its position
+    SDL_Surface *window_surface_ptr_;
+    SDL_Surface *image_ptr_;
 
 protected:
-    size_t a_width;
-    size_t a_height;
+    size_t _width;
+    size_t _height;
     int _speed;
 
 public:
+    std::string _type;
     int _pos_x;
     int _pos_y;
-    animal(const std::string &file_path, SDL_Surface *window_surface_ptr);
-    // todo: The constructor has to load the sdl_surface that corresponds to the
-    // texture
-    virtual ~animal(); // todo: Use the destructor to release memory and "clean
-                       // up behind you"
 
-    void draw();
+    moving_object(const std::string &file_path,
+                  SDL_Surface *window_surface_ptr);
+    virtual ~moving_object();
+    virtual void draw();
+    // virtual void move(){};
+};
+class animal : public moving_object
+{
+public:
+    animal(const std::string &file_path, SDL_Surface *window_surface_ptr);
+
+    virtual ~animal(){}; // todo: Use the destructor to release memory and
+                         // "clean up behind you"
+
+    // void draw(){};
     // todo: Draw the animal on the screen <-> window_surface_ptr.
     // Note that this function is not virtual, it does not depend
     // on the static type of the instance
 
     virtual void move(){}; // todo: Animals move around, but in a different
                            // fashion depending on which type of animal
-    virtual void interact(std::unique_ptr<animal> &ani){};
+    virtual void interact(std::unique_ptr<moving_object> &obj){};
     // todo: Animals interact around, but in a different
     // fashion depending on which type of animal
 };
-
-// Insert here:
-// class sheep, derived from animal
 class sheep : public animal
 {
     // Ctor
@@ -73,7 +74,7 @@ public:
     virtual ~sheep() override;
     // implement functions that are purely virtual in base class
     virtual void move() override;
-    virtual void interact(std::unique_ptr<animal> &ani) override;
+    virtual void interact(std::unique_ptr<moving_object> &obj) override;
 };
 
 class shepherd_dog : public animal
@@ -89,6 +90,7 @@ public:
     // implement functions that are purely virtual in base class
     virtual void move() override;
     void follow_shepherd_move(int shepherd_x, int shepherd_y);
+    virtual void interact(std::unique_ptr<moving_object> &obj) override{};
 };
 
 // class wolf, derived from animal
@@ -112,23 +114,25 @@ public:
     virtual ~wolf() override;
     // implement functions that are purely virtual in base class
     virtual void move() override;
-    virtual void interact(std::unique_ptr<animal> &ani) override;
+    virtual void interact(std::unique_ptr<moving_object> &ani) override;
 };
-class shepherd
+
+class shepherd : public moving_object
 {
-private:
-    // Attention, NON-OWNING ptr, again to the screen
-    SDL_Surface *window_surface_ptr_;
-    unsigned shepherd_h = 89;
-    unsigned shepherd_w = 60;
+    char direction;
+    // private:
+    // SDL_Surface *window_surface_ptr_;
+    // unsigned shepherd_h = 89;
+    // unsigned shepherd_w = 60;
 
 public:
-    int _pos_x;
-    int _pos_y, _speed;
+    // int _pos_x;
+    // int _pos_y, _speed;
     // ground() = default;
     shepherd(SDL_Surface *); // Ctor
     ~shepherd(); // Dtor, again for clean up (if necessary)
-    void draw();
+    // void draw();
+    // virtual void move() override;
     void move(char direction);
 };
 // The "ground" on which all the animals live (like the std::vector
