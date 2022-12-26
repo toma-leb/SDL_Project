@@ -19,6 +19,7 @@ constexpr unsigned frame_height = 900; // Height of window in pixel
 // Minimal distance of animals to the border
 // of the screen
 constexpr unsigned frame_boundary = 100;
+constexpr unsigned hunger_count = 300;
 
 // Helper function to initialize SDL
 void init();
@@ -34,14 +35,17 @@ protected:
     int _speed;
 
 public:
+    bool alive = true;
     std::string _type;
     int _pos_x;
     int _pos_y;
 
     moving_object(const std::string &file_path,
                   SDL_Surface *window_surface_ptr);
-    virtual ~moving_object();
+    virtual ~moving_object(); // Use the destructor to release memory and
     virtual void draw();
+    // virtual void interact(std::unique_ptr<moving_object> &obj);
+
     // virtual void move(){};
 };
 class animal : public moving_object
@@ -49,116 +53,109 @@ class animal : public moving_object
 public:
     animal(const std::string &file_path, SDL_Surface *window_surface_ptr);
 
-    virtual ~animal(){}; // todo: Use the destructor to release memory and
-                         // "clean up behind you"
+    virtual ~animal(){};
 
-    // void draw(){};
-    // todo: Draw the animal on the screen <-> window_surface_ptr.
-    // Note that this function is not virtual, it does not depend
-    // on the static type of the instance
+    virtual void move(){}; // Animals move around, but in a different
 
-    virtual void move(){}; // todo: Animals move around, but in a different
-                           // fashion depending on which type of animal
-    virtual void interact(std::unique_ptr<moving_object> &obj){};
-    // todo: Animals interact around, but in a different
-    // fashion depending on which type of animal
+    virtual void interact(moving_object &obj){};
 };
 class sheep : public animal
 {
-    // Ctor
     char _genre;
+    int danger_distance = 40;
+    int danger_x = 0;
+    int danger_y = 0;
+    int scare_speed = 5;
+    std::vector<bool> wolfs_nearby;
 
 public:
     sheep(SDL_Surface *window_surface_ptr);
-    // Dtor
     virtual ~sheep() override;
-    // implement functions that are purely virtual in base class
     virtual void move() override;
-    virtual void interact(std::unique_ptr<moving_object> &obj) override;
+    virtual void interact(moving_object &obj) override;
 };
 
 class shepherd_dog : public animal
 {
     // Ctor
-    float cir_angle = 0;
+    float spin_speed = 0.1; // 0 to 1
+    int shepherd_x = 0;
+    int shepherd_y = 0;
+    int dis_fr_shepherd = 5;
+    int angle_incre = 1;
 
 public:
-    int distance_max = 25;
     shepherd_dog(SDL_Surface *window_surface_ptr);
     // Dtor
     virtual ~shepherd_dog() override;
-    // implement functions that are purely virtual in base class
+
     virtual void move() override;
-    void follow_shepherd_move(int shepherd_x, int shepherd_y);
-    virtual void interact(std::unique_ptr<moving_object> &obj) override{};
+
+    // void follow_shepherd_move(int shepherd_x, int shepherd_y);
+
+    virtual void interact(moving_object &obj) override;
 };
 
 // class wolf, derived from animal
 class wolf : public animal
 {
-    // const std::string file_path = "../../media/wolf.png";
     // Ctor
     unsigned int dead_time = 2000;
-    int hunt_distance = 2000;
-    int eat_distance = 30;
-    int target_x = 0;
-    int target_y = 0;
-    int min_distance = 100;
-    int avoid_x = 0;
-    int avoid_y = 0;
+    int closest_sheep_dis = 2000;
+    int eat_dis = 40;
+    int sheep_x = 0;
+    int sheep_y = 0;
+    int _hunger_count = hunger_count;
+
+    int danger_dis = 90;
+    int dog_x = 0;
+    int dog_y = 0;
     bool run_away = false;
 
 public:
     wolf(SDL_Surface *window_surface_ptr);
     // Dtor
     virtual ~wolf() override;
-    // implement functions that are purely virtual in base class
     virtual void move() override;
-    virtual void interact(std::unique_ptr<moving_object> &ani) override;
+    virtual void interact(moving_object &obj) override;
 };
 
 class shepherd : public moving_object
 {
     char direction;
-    // private:
-    // SDL_Surface *window_surface_ptr_;
-    // unsigned shepherd_h = 89;
-    // unsigned shepherd_w = 60;
 
 public:
-    // int _pos_x;
-    // int _pos_y, _speed;
-    // ground() = default;
     shepherd(SDL_Surface *); // Ctor
     ~shepherd(); // Dtor, again for clean up (if necessary)
-    // void draw();
-    // virtual void move() override;
+
     void move(char direction);
+    void order(int pos_x, int pos_y, moving_object &obj);
 };
-// The "ground" on which all the animals live (like the std::vector
-// in the zoo example).
+
+// The "ground" on which all the animals live
 class ground
 {
 private:
     // Attention, NON-OWNING ptr, again to the screen
     SDL_Surface *window_surface_ptr_;
-    // const std::string file_path = "../../media/farm.png";
-
     // Some attribute to store all the wolves and sheep
     unsigned _n_sheep;
     unsigned _n_wolf;
     std::vector<std::unique_ptr<animal>> animals;
-    // here
 
 public:
-    std::unique_ptr<shepherd> _shepherd; // TODO
+    std::unique_ptr<shepherd> _shepherd;
 
     // ground() = default;
     ground(SDL_Surface *); // Ctor
+
     ~ground(){}; // Dtor, again for clean up (if necessary)
     void draw();
-    void add_animal(unsigned n_sheep, unsigned n_wolf); // todo: Add an animal
-    void update(); // todo: "refresh the screen": Move animals and draw them
+
+    void add_animal(unsigned n_sheep, unsigned n_wolf);
+
+    void update(); // "refresh the screen": Move animals and draw them
+
     // Possibly other methods, depends on your implementation
 };
 

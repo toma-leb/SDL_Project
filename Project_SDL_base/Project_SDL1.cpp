@@ -8,6 +8,7 @@
 #include <cmath>
 #include <cstdlib>
 #include <ctime>
+#include <iostream>
 #include <numeric>
 #include <random>
 #include <string>
@@ -75,8 +76,24 @@ namespace
         }
         return pos;
     }
+    int get_distance_between_2_point(int pos_x_1, int pos_y_1, int pos_x_2,
+                                     int pos_y_2)
+    {
+        int xdiff = pos_x_1 - pos_x_2;
+        int ydiff = pos_y_1 - pos_y_2;
+        return sqrt(xdiff * xdiff + ydiff * ydiff);
+    }
+
+    float get_angle_between_2_point(int pos_x_1, int pos_y_1, int pos_x_2,
+                                    int pos_y_2)
+    {
+        int xdiff = pos_x_1 - pos_x_2;
+        int ydiff = pos_y_1 - pos_y_2;
+        return atan2(ydiff, xdiff) * (180 / PI);
+    }
 
 } // namespace
+// -------------- moving object class -----------------
 moving_object::moving_object(const std::string &file_path,
                              SDL_Surface *window_surface_ptr)
 {
@@ -96,19 +113,23 @@ void moving_object::draw()
     if (SDL_BlitSurface(image_ptr_, NULL, window_surface_ptr_, &dst_rect))
         throw std::runtime_error("Could not apply texture.");
 }
-// animal
+
+// -------------------------------- animal class -------------
+
 animal::animal(const std::string &file_path, SDL_Surface *window_surface_ptr)
     : moving_object(file_path, window_surface_ptr)
 {
     std::cout << "new animal created \n";
 }
 
-// sheep
+// -------------------------------- sheeps class ----------------
+
 sheep::sheep(SDL_Surface *window_surface_ptr)
     : animal("../media/sheep.png", window_surface_ptr)
 {
     this->_height = 55;
     this->_width = 55;
+    this->_type = "sheep";
     this->_pos_x = std::rand() % 50 + 300; // right  || left
     this->_pos_y = std::rand() % 50 + 200; // up || down
     this->_speed = 5; // it's just the speed of the sheep
@@ -119,166 +140,198 @@ sheep::~sheep()
     std::cout << " A sheep died" << std::endl;
 }
 
+// Sheep move randomly around the map except when getting too close to a wolf.
+// In this case, they get a temporary speed boost in the opposite direction of
+// the wolf.
+void sheep::interact(moving_object &obj)
+{
+    bool wolf_nearby = false;
+    if (obj._type.compare("wolf") == 0)
+    {
+        int distance = get_distance_between_2_point(this->_pos_x, this->_pos_y,
+                                                    obj._pos_x, obj._pos_y);
+        if (distance < danger_distance + _width)
+        {
+            danger_x = obj._pos_x;
+            danger_y = obj._pos_y;
+            wolf_nearby = true;
+        }
+    }
+    if (obj._type.compare("sheep") == 0)
+    {
+    }
+    wolfs_nearby.push_back(wolf_nearby);
+}
+
 void sheep::move()
 {
-    if (_pos_x + _width == 0)
-        _pos_x -= _speed;
-    else if (_pos_x + _width == frame_width)
-        _pos_x += _speed;
+    // if there are a wolf nearby then run !!!
+    if (std::binary_search(wolfs_nearby.begin(), wolfs_nearby.end(), true))
+    {
+        std::cout << " wolf nearly \n";
+        _speed += scare_speed;
+        float angle =
+            get_angle_between_2_point(_pos_x, _pos_y, danger_x, danger_y);
+        if (_pos_x - _speed > 0)
+            _pos_x -= _speed * cos(angle);
+        if (_pos_y - _speed > 0)
+            _pos_y -= _speed * sin(angle);
+        wolfs_nearby.clear();
+    }
     else
+    {
+        _speed = 5;
+        _pos_y = get_ran_pos(_pos_y, _speed, _height, frame_height);
         _pos_x = get_ran_pos(_pos_x, _speed, _width, frame_width);
-    if (_pos_y == 0)
-        _pos_y -= _speed;
-    else if (_pos_y + _height == frame_height)
-        _pos_y += _speed;
-    _pos_y = get_ran_pos(_pos_y, _speed, _height, frame_height);
-} // wolfs
-void sheep::interact(std::unique_ptr<moving_object> &obj)
-{}
-shepherd_dog::shepherd_dog(SDL_Surface *window_surface_ptr)
-    : animal("../media/Shepherd_dog.png", window_surface_ptr)
-{
-    this->_height = 46;
-    this->_width = 60;
+    }
+}
 
-    this->_pos_x = std::rand() % 10 + 300; // right  || left
-    this->_pos_y = std::rand() % 10 + 250; // up || down
-    this->_speed = 10; // it's just the speed of the sheep
-}
-shepherd_dog::~shepherd_dog()
-{
-    std::cout << " The shepherd_dog died" << std::endl;
-}
-void shepherd_dog::move()
-{
-    _pos_x = get_ran_pos(_pos_x, _speed, _width, frame_width);
-    _pos_y = get_ran_pos(_pos_y, _speed, _height, frame_height);
-}
-void shepherd_dog::follow_shepherd_move(int shepherd_x, int shepherd_y)
-{
-    int xdiff = this->_pos_x - shepherd_x;
-    int ydiff = this->_pos_y - shepherd_y;
-    int distance = sqrt(xdiff * xdiff + ydiff * ydiff);
-    if (distance > distance_max) // dog is far away from the master
-    {
-        cir_angle = 0;
-        std::cout << distance << "\n";
-        float angle = atan2(ydiff, xdiff) * (180 / PI);
-        this->_pos_x += this->_speed * cos(angle);
-        this->_pos_y += this->_speed * sin(angle);
-    }
-    else
-    {
-        cir_angle += (30) * (PI / 180); // Convert to radians
-        std::cout << cir_angle << "\n";
-        this->_pos_x =
-            cos(cir_angle) * (xdiff)-sin(cir_angle) * (ydiff) + shepherd_x;
-        this->_pos_y =
-            sin(cir_angle) * (xdiff) + cos(cir_angle) * (ydiff) + shepherd_y;
-    }
-}
+// -------------------------------- wolfs class-----------
+
 wolf::wolf(SDL_Surface *window_surface_ptr)
     : animal("../media/wolf.png", window_surface_ptr)
 {
     this->_height = 42;
     this->_width = 62;
-
+    this->_type = "wolf";
     this->_pos_x = std::rand() % 10 + 1000; // right  || left
     this->_pos_y = std::rand() % 10 + 400; // up || down
-    this->_speed = 10; // it's just the speed of the sheep
+    this->_speed = 10;
 }
 wolf::~wolf()
 {
     std::cout << " A wolf died" << std::endl;
 }
-void wolf::interact(std::unique_ptr<moving_object> &animal)
+void wolf::interact(moving_object &obj)
 {
-    int xdiff = this->_pos_x - animal->_pos_x;
-    int ydiff = this->_pos_y - animal->_pos_y;
-    int distance = sqrt(xdiff * xdiff + ydiff * ydiff);
-    std::cout << "interacting " << std::endl;
-
-    if (typeid(animal) == typeid(shepherd_dog) && distance < min_distance)
+    int distance =
+        get_distance_between_2_point(_pos_x, _pos_y, obj._pos_x, obj._pos_y);
+    if (obj._type.compare("sheep") == 0) // look for the closest sheep
     {
-        std::cout << "interact dog" << std::endl;
-
-        avoid_x = animal->_pos_x;
-        avoid_y = animal->_pos_y;
-        run_away = true;
+        if (distance < closest_sheep_dis)
+        {
+            sheep_x = obj._pos_x;
+            sheep_y = obj._pos_y;
+            closest_sheep_dis = distance;
+        }
+        if (distance < eat_dis) // eat sheep
+        {
+            obj.alive = false;
+            _hunger_count = hunger_count;
+            closest_sheep_dis = 2000;
+            sheep_x = 0;
+            sheep_y = 0;
+        }
+        // std::cout << "interact sheep" << closest_sheep_dis << "\n";
     }
-    else if ((typeid(animal) == typeid(sheep)))
+    else if (obj._type.compare("shepherd_dog") == 0)
     {
-        std::cout << "interact sheeps" << std::endl;
-
-        if (distance < eat_distance)
-        {
-            // animal = nullptr;
-            hunt_distance != 2000;
-            dead_time = 2000;
-            std::cout << "eaten " << std::endl;
-        }
-        else if (distance < hunt_distance && hunt_distance != 2000)
-        {
-            target_x = animal->_pos_x;
-            target_y = animal->_pos_y;
-            hunt_distance = distance;
-        }
+        // std::cout << "interact dog\n";
         run_away = false;
+        if (distance < danger_dis)
+        {
+            dog_x = obj._pos_x;
+            dog_y = obj._pos_y;
+            run_away = true;
+        }
     }
 }
 void wolf::move()
 {
-    if (avoid_x != 0 && avoid_y != 0 && run_away) // avoiding dog
+    if (run_away) // avoiding dog
     {
-        std::cout << " avoid dog" << std::endl;
-        int xdiff = this->_pos_x - avoid_x;
-        int ydiff = this->_pos_y - avoid_y;
-        float angle = atan2(ydiff, xdiff) * (180 / PI);
+        std::cout << " run away dog \n";
+        float angle = get_angle_between_2_point(_pos_x, _pos_y, dog_x, dog_y);
+
         this->_pos_x -= this->_speed * cos(angle);
         this->_pos_y -= this->_speed * sin(angle);
     }
-    else if (target_x != 0 && target_y != 0) // hunting for sheeps
+    else if (sheep_x != 0 && sheep_y != 0) // hunting for sheeps
     {
-        std::cout << "hunting sheeps" << std::endl;
-        int xdiff = this->_pos_x - target_x;
-        int ydiff = this->_pos_y - target_y;
-        float angle = atan2(ydiff, xdiff) * (180 / PI);
+        // std::cout << "hunting sheeps \n";
+        float angle =
+            get_angle_between_2_point(_pos_x, _pos_y, sheep_x, sheep_y);
+
         this->_pos_x += this->_speed * cos(angle);
         this->_pos_y += this->_speed * sin(angle);
+        _hunger_count -= 1;
+        closest_sheep_dis = 2000; // reset distance to closest
     }
     else
     {
         _pos_x = get_ran_pos(_pos_x, _speed, _width, frame_width);
         _pos_y = get_ran_pos(_pos_y, _speed, _height, frame_height);
     }
+    alive = _hunger_count != 0 ? true : false;
 }
-//---------------------- human
+// -------------------------------- shepherd_dog class --------------
+
+shepherd_dog::shepherd_dog(SDL_Surface *window_surface_ptr)
+    : animal("../media/Shepherd_dog.png", window_surface_ptr)
+{
+    this->_height = 46;
+    this->_width = 60;
+    this->_type = "shepherd_dog";
+    this->_pos_x = std::rand() % 10 + 200; // right  || left
+    this->_pos_y = std::rand() % 10 + 350; // up || down
+    this->_speed = 10;
+}
+shepherd_dog::~shepherd_dog()
+{
+    std::cout << " The shepherd_dog died" << std::endl;
+}
+
+void shepherd_dog::interact(moving_object &obj)
+{
+    if (obj._type.compare("shepherd") == 0)
+    {
+        shepherd_x = obj._pos_x;
+        shepherd_y = obj._pos_y;
+    }
+}
+void shepherd_dog::move()
+{
+    if (shepherd_x != 0 && shepherd_y != 0)
+    {
+        int xdiff = this->_pos_x - shepherd_x;
+        int ydiff = this->_pos_y - shepherd_y;
+        int distance = sqrt(xdiff * xdiff + ydiff * ydiff);
+        if (distance < dis_fr_shepherd)
+        {
+            float angle = atan2(ydiff, xdiff) * (180 / PI);
+            std::cout << distance << "   " << angle << "\n";
+
+            this->_pos_x += this->_speed * cos(angle);
+            this->_pos_y += this->_speed * sin(angle);
+            std::cout << _pos_x << "  " << _pos_y << "\n";
+        }
+        else
+        {
+            this->_pos_x = cos(spin_speed) * (xdiff)-sin(spin_speed) * (ydiff)
+                + shepherd_x;
+            this->_pos_y = sin(spin_speed) * (xdiff) + cos(spin_speed) * (ydiff)
+                + shepherd_y;
+        }
+    }
+}
+
+//---------------------- shepherd class ------------------------------
 shepherd::shepherd(SDL_Surface *window_surface_ptr)
     : moving_object("../media/Shepherd.png", window_surface_ptr)
 {
     this->_height = 89;
     this->_width = 60;
-    // window_surface_ptr_ = window_surface_ptr;
+    this->_type = "shepherd";
     this->_pos_x = std::rand() % 10 + 100; // right  || left
     this->_pos_y = std::rand() % 10 + 400; // up || down
-    this->_speed = 10; // it's just the speed of the sheep
+    this->_speed = 10;
+    std::cout << "new player created \n";
 }
 shepherd::~shepherd()
 {
     std::cout << " player died !!!" << std::endl;
 }
-// void shepherd::draw()
-// {
-//     std::srand(std::time(nullptr));
-//     auto dst_rect =
-//         SDL_Rect{ _pos_x, _pos_y, (int)shepherd_h, (int)shepherd_w };
 
-//     auto surf = load_surface_for("../media/Shepherd.png",
-//     window_surface_ptr_);
-
-//     if (SDL_BlitSurface(surf, NULL, window_surface_ptr_, &dst_rect))
-//         throw std::runtime_error("Could not apply texture.");
-// }
 void shepherd::move(char direction) // TOTO: apply size
 {
     switch (direction)
@@ -301,7 +354,7 @@ void shepherd::move(char direction) // TOTO: apply size
         break;
     }
 }
-//---------------------- ground
+//---------------------- ground -------------------------------
 ground::ground(SDL_Surface *window_surface_ptr)
 {
     window_surface_ptr_ = window_surface_ptr;
@@ -311,44 +364,54 @@ void ground::add_animal(unsigned n_sheep, unsigned n_wolf)
 {
     _n_sheep = n_sheep;
     _n_wolf = n_wolf;
-
-    animals.resize(_n_wolf + 2 + _n_sheep);
+    animals.resize(_n_wolf + 1 + _n_sheep);
     // add the dog
     animals[0] = std::make_unique<shepherd_dog>(window_surface_ptr_);
     // add sheeps
     for (unsigned i = 1; i <= _n_sheep; i++)
         animals[i] = std::make_unique<sheep>(window_surface_ptr_);
     // add wolfs
-    for (unsigned i = _n_sheep + 1; i <= _n_wolf + 1 + _n_sheep; i++)
+    for (unsigned i = _n_sheep + 1; i < _n_wolf + 1 + _n_sheep; i++)
         animals[i] = std::make_unique<wolf>(window_surface_ptr_);
 }
 void ground::draw()
 {
     std::srand(std::time(nullptr));
     auto dst_rect = SDL_Rect{ 0, 0, (int)frame_height, (int)frame_width };
-
     auto surf = load_surface_for("../media/farm.png", window_surface_ptr_);
 
     if (SDL_BlitSurface(surf, NULL, window_surface_ptr_, &dst_rect))
         throw std::runtime_error("Could not apply texture.");
 
     for (unsigned i = 0; i < animals.size(); i++)
-        if (animals[i] != nullptr)
+        if (animals[i])
             animals[i]->draw();
     _shepherd->draw();
 }
 void ground::update()
 {
-    // for (unsigned i = 0; i < animals.size(); i++)
-    //     for (unsigned j = 0; j < animals.size(); j++)
-    //         if (i != j && animals[i] != nullptr && animals[j] != nullptr)
-    //         {
-    //             animals[i]->interact(animals[j]);
-    //         }
-
+    // interacting between animals
     for (unsigned i = 0; i < animals.size(); i++)
-        if (animals[i] != nullptr)
-            animals[i]->move();
+        for (unsigned j = 0; j < animals.size(); j++)
+            if (i != j && animals[i] && animals[j])
+            {
+                animals[i]->interact(*animals[j]);
+            }
+
+    animals[0]->interact(*_shepherd);
+
+    // updating the position and existance of the animal
+    for (unsigned i = 0; i < animals.size(); i++)
+    {
+        if (animals[i])
+        {
+            if (!animals[i]->alive)
+                animals[i] = nullptr;
+            else
+                animals[i]->move();
+        }
+    }
+
     draw();
 }
 
@@ -413,6 +476,9 @@ int application::loop(unsigned period)
                     break;
                 case SDLK_d:
                     direction = 'r';
+                    break;
+                case SDL_MOUSEBUTTONUP:
+                    // get position
                     break;
                 }
             }
