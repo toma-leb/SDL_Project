@@ -1,9 +1,10 @@
-﻿// SDL_Test.h: Includedatei für Include-Standardsystemdateien
+﻿// SDL_Test.h: Include file for include standard system files
 
 #pragma once
 
 #include <SDL.h>
 #include <SDL_image.h>
+#include <any>
 #include <cmath>
 #include <iostream>
 #include <map>
@@ -17,9 +18,24 @@ constexpr double frame_time = 1. / frame_rate;
 constexpr unsigned frame_width = 1400; // Width of window in pixel
 constexpr unsigned frame_height = 900; // Height of window in pixel
 // Minimal distance of animals to the border
-// of the screen
 constexpr unsigned frame_boundary = 100;
-constexpr unsigned hunger_count = 300;
+// Animals default properties
+// ---------- sheeps --------------
+constexpr int sheep_danger_dis = 40;
+constexpr int sheep_scare_speed = 5;
+constexpr int sheep_normal_speed = 5;
+constexpr unsigned sheep_offspring_counter = 100;
+// ---------- wolfs ---------------
+constexpr unsigned wolf_hunger_count = 300;
+constexpr int wolf_start_search_sheep_dis = 2000;
+constexpr int wolf_danger_dis = 90;
+constexpr int wolf_eat_dis = 40;
+// ---------- shepherd dog --------
+constexpr float dog_spin_speed = 0.1; // 0 to 1
+constexpr int dog_dis_fr_shepherd = 5;
+// constexpr int angle_incre = 1;
+// constexpr int shepherd_x = 0;
+// constexpr int shepherd_y = 0;
 
 // Helper function to initialize SDL
 void init();
@@ -36,9 +52,10 @@ protected:
 
 public:
     bool alive = true;
-    std::string _type;
     int _pos_x;
     int _pos_y;
+    std::string _type;
+    std::map<std::string, std::any> _properties;
 
     moving_object(const std::string &file_path,
                   SDL_Surface *window_surface_ptr);
@@ -61,11 +78,6 @@ public:
 };
 class sheep : public animal
 {
-    char _genre;
-    int danger_distance = 40;
-    int danger_x = 0;
-    int danger_y = 0;
-    int scare_speed = 5;
     std::vector<bool> wolfs_nearby;
 
 public:
@@ -78,11 +90,11 @@ public:
 class shepherd_dog : public animal
 {
     // Ctor
-    float spin_speed = 0.1; // 0 to 1
-    int shepherd_x = 0;
-    int shepherd_y = 0;
-    int dis_fr_shepherd = 5;
-    int angle_incre = 1;
+    // float spin_speed = 0.1; // 0 to 1
+    // int shepherd_x = 0;
+    // int shepherd_y = 0;
+    // int dis_fr_shepherd = 5;
+    // int angle_incre = 1;
 
 public:
     shepherd_dog(SDL_Surface *window_surface_ptr);
@@ -100,17 +112,17 @@ public:
 class wolf : public animal
 {
     // Ctor
-    unsigned int dead_time = 2000;
-    int closest_sheep_dis = 2000;
-    int eat_dis = 40;
-    int sheep_x = 0;
-    int sheep_y = 0;
-    int _hunger_count = hunger_count;
+    // unsigned int dead_time = 2000;
+    // int closest_sheep_dis = 2000;
+    // int eat_dis = 40;
+    // int sheep_x = 0;
+    // int sheep_y = 0;
+    // int _hunger_count = hunger_count;
 
-    int danger_dis = 90;
-    int dog_x = 0;
-    int dog_y = 0;
-    bool run_away = false;
+    // int danger_dis = 90;
+    // int dog_x = 0;
+    // int dog_y = 0;
+    // bool run_away = false;
 
 public:
     wolf(SDL_Surface *window_surface_ptr);
@@ -136,6 +148,7 @@ public:
 class ground
 {
 private:
+    int new_members = 0;
     // Attention, NON-OWNING ptr, again to the screen
     SDL_Surface *window_surface_ptr_;
     // Some attribute to store all the wolves and sheep

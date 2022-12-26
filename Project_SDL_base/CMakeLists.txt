@@ -4,7 +4,7 @@ project ("Project_SDL_base")
 IF(WIN32)
   message(STATUS "Building for windows")
 
-  set (CMAKE_CXX_STANDARD 17)
+  set(CMAKE_CXX_STANDARD 17)
   set(SDL2_INCLUDE_DIRS "SDL2/include")
   set(SDL2IMAGE_INCLUDE_DIRS "SDL2_image/include")
 
@@ -34,5 +34,6 @@ ELSE()
   include_directories(${SDL2_IMAGE_INCLUDE_DIRS})
 
   add_executable(SDL_project main.cpp Project_SDL1.cpp)
+  target_compile_features(SDL_project PUBLIC cxx_std_17)
   target_link_libraries(SDL_project ${SDL2_LIBRARIES} ${SDL2_IMAGE_LIBRARIES})
 ENDIF()

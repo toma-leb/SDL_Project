@@ -1,4 +1,4 @@
-﻿// SDL_Test.cpp: Definiert den Einstiegspunkt für die Anwendung.
+﻿// SDL_Test.cpp: Include file for include standard system files
 //
 
 #include "Project_SDL1.h"
@@ -132,8 +132,13 @@ sheep::sheep(SDL_Surface *window_surface_ptr)
     this->_type = "sheep";
     this->_pos_x = std::rand() % 50 + 300; // right  || left
     this->_pos_y = std::rand() % 50 + 200; // up || down
-    this->_speed = 5; // it's just the speed of the sheep
-    this->_genre = std::rand() % 2 == 0 ? 'm' : 'f';
+    this->_speed = sheep_normal_speed; // it's just the speed of the sheep
+    std::string _genre = std::rand() % 2 == 0 ? "m" : "f";
+    _properties.insert(std::make_pair("genre", _genre));
+    _properties["offspring_counter"] = sheep_offspring_counter;
+    _properties["offspring"] = false;
+    _properties["offspring"] = false;
+    _properties["danger_x"] = 0;
 }
 sheep::~sheep()
 {
@@ -145,21 +150,24 @@ sheep::~sheep()
 // the wolf.
 void sheep::interact(moving_object &obj)
 {
+    // std::cout << std::any_cast<std::string>(_properties["genre"]);
     bool wolf_nearby = false;
     if (obj._type.compare("wolf") == 0)
     {
         int distance = get_distance_between_2_point(this->_pos_x, this->_pos_y,
                                                     obj._pos_x, obj._pos_y);
-        if (distance < danger_distance + _width)
+        if (distance < sheep_danger_dis + _width)
         {
-            danger_x = obj._pos_x;
-            danger_y = obj._pos_y;
+            _properties["danger_x"] = obj._pos_x;
+            _properties["danger_y"] = obj._pos_y;
             wolf_nearby = true;
         }
     }
     if (obj._type.compare("sheep") == 0)
     {
+        // offspring
     }
+
     wolfs_nearby.push_back(wolf_nearby);
 }
 
@@ -169,9 +177,10 @@ void sheep::move()
     if (std::binary_search(wolfs_nearby.begin(), wolfs_nearby.end(), true))
     {
         std::cout << " wolf nearly \n";
-        _speed += scare_speed;
-        float angle =
-            get_angle_between_2_point(_pos_x, _pos_y, danger_x, danger_y);
+        _speed += sheep_scare_speed;
+        int w_x = std::any_cast<int>(_properties["danger_x"]);
+        int w_y = std::any_cast<int>(_properties["danger_y"]);
+        float angle = get_angle_between_2_point(_pos_x, _pos_y, w_x, w_y);
         if (_pos_x - _speed > 0)
             _pos_x -= _speed * cos(angle);
         if (_pos_y - _speed > 0)
@@ -180,10 +189,13 @@ void sheep::move()
     }
     else
     {
-        _speed = 5;
+        _speed = sheep_normal_speed;
         _pos_y = get_ran_pos(_pos_y, _speed, _height, frame_height);
         _pos_x = get_ran_pos(_pos_x, _speed, _width, frame_width);
     }
+    unsigned offspr_count =
+        std::any_cast<unsigned>(_properties["offspring_counter"]);
+    _properties["offspring_counter"] = offspr_count > 0 ? offspr_count - 1 : 0;
 }
 
 // -------------------------------- wolfs class-----------
@@ -197,6 +209,13 @@ wolf::wolf(SDL_Surface *window_surface_ptr)
     this->_pos_x = std::rand() % 10 + 1000; // right  || left
     this->_pos_y = std::rand() % 10 + 400; // up || down
     this->_speed = 10;
+    _properties["search_sheep_dis"] = wolf_start_search_sheep_dis;
+    _properties["hunger_count"] = wolf_hunger_count;
+    _properties["run_away"] = false;
+    _properties["sheep_x"] = 0;
+    _properties["sheep_y"] = 0;
+    _properties["dog_x"] = 0;
+    _properties["dog_y"] = 0;
 }
 wolf::~wolf()
 {
@@ -206,43 +225,48 @@ void wolf::interact(moving_object &obj)
 {
     int distance =
         get_distance_between_2_point(_pos_x, _pos_y, obj._pos_x, obj._pos_y);
+    int search_dis = std::any_cast<int>(_properties["search_sheep_dis"]);
     if (obj._type.compare("sheep") == 0) // look for the closest sheep
     {
-        if (distance < closest_sheep_dis)
+        if (distance < search_dis)
         {
-            sheep_x = obj._pos_x;
-            sheep_y = obj._pos_y;
-            closest_sheep_dis = distance;
+            _properties["sheep_x"] = obj._pos_x;
+            _properties["sheep_y"] = obj._pos_y;
+            _properties["search_sheep_dis"] = distance;
         }
-        if (distance < eat_dis) // eat sheep
+        if (distance < wolf_eat_dis) // eat sheep
         {
             obj.alive = false;
-            _hunger_count = hunger_count;
-            closest_sheep_dis = 2000;
-            sheep_x = 0;
-            sheep_y = 0;
+            // reset hunger count
+            _properties["hunger_count"] = wolf_hunger_count;
+            // reset search distance
+            _properties["search_sheep_dis"] = wolf_start_search_sheep_dis;
+            _properties["sheep_x"] = 0;
+            _properties["sheep_y"] = 0;
         }
-        // std::cout << "interact sheep" << closest_sheep_dis << "\n";
     }
     else if (obj._type.compare("shepherd_dog") == 0)
     {
         // std::cout << "interact dog\n";
-        run_away = false;
-        if (distance < danger_dis)
+        _properties["run_away"] = false;
+        if (distance < wolf_danger_dis)
         {
-            dog_x = obj._pos_x;
-            dog_y = obj._pos_y;
-            run_away = true;
+            _properties["dog_x"] = obj._pos_x;
+            _properties["dog_y"] = obj._pos_y;
+            _properties["run_away"] = true;
         }
     }
 }
 void wolf::move()
 {
-    if (run_away) // avoiding dog
+    int dog_x = std::any_cast<int>(_properties["dog_x"]);
+    int dog_y = std::any_cast<int>(_properties["dog_y"]);
+    int sheep_x = std::any_cast<int>(_properties["sheep_x"]);
+    int sheep_y = std::any_cast<int>(_properties["sheep_y"]);
+    if (std::any_cast<bool>(_properties["run_away"])) // avoiding dog
     {
         std::cout << " run away dog \n";
         float angle = get_angle_between_2_point(_pos_x, _pos_y, dog_x, dog_y);
-
         this->_pos_x -= this->_speed * cos(angle);
         this->_pos_y -= this->_speed * sin(angle);
     }
@@ -251,18 +275,19 @@ void wolf::move()
         // std::cout << "hunting sheeps \n";
         float angle =
             get_angle_between_2_point(_pos_x, _pos_y, sheep_x, sheep_y);
-
         this->_pos_x += this->_speed * cos(angle);
         this->_pos_y += this->_speed * sin(angle);
-        _hunger_count -= 1;
-        closest_sheep_dis = 2000; // reset distance to closest
+        _properties["hunger_count"] =
+            std::any_cast<unsigned>(_properties["hunger_count"]) + 1;
+        _properties["search_sheep_dis"] = 2000; // reset distance to closest
     }
     else
     {
         _pos_x = get_ran_pos(_pos_x, _speed, _width, frame_width);
         _pos_y = get_ran_pos(_pos_y, _speed, _height, frame_height);
     }
-    alive = _hunger_count != 0 ? true : false;
+    alive = std::any_cast<unsigned>(_properties["hunger_count"]) != 0 ? true
+                                                                      : false;
 }
 // -------------------------------- shepherd_dog class --------------
 
@@ -275,6 +300,8 @@ shepherd_dog::shepherd_dog(SDL_Surface *window_surface_ptr)
     this->_pos_x = std::rand() % 10 + 200; // right  || left
     this->_pos_y = std::rand() % 10 + 350; // up || down
     this->_speed = 10;
+    _properties["shepherd_x"] = 0;
+    _properties["shepherd_y"] = 0;
 }
 shepherd_dog::~shepherd_dog()
 {
@@ -285,18 +312,22 @@ void shepherd_dog::interact(moving_object &obj)
 {
     if (obj._type.compare("shepherd") == 0)
     {
-        shepherd_x = obj._pos_x;
-        shepherd_y = obj._pos_y;
+        _properties["shepherd_x"] = obj._pos_x;
+        _properties["shepherd_y"] = obj._pos_y;
     }
 }
 void shepherd_dog::move()
 {
+    int shepherd_x = std::any_cast<int>(_properties["shepherd_x"]);
+    int shepherd_y = std::any_cast<int>(_properties["shepherd_y"]);
+
     if (shepherd_x != 0 && shepherd_y != 0)
     {
         int xdiff = this->_pos_x - shepherd_x;
         int ydiff = this->_pos_y - shepherd_y;
         int distance = sqrt(xdiff * xdiff + ydiff * ydiff);
-        if (distance < dis_fr_shepherd)
+
+        if (distance < dog_dis_fr_shepherd)
         {
             float angle = atan2(ydiff, xdiff) * (180 / PI);
             std::cout << distance << "   " << angle << "\n";
@@ -307,10 +338,10 @@ void shepherd_dog::move()
         }
         else
         {
-            this->_pos_x = cos(spin_speed) * (xdiff)-sin(spin_speed) * (ydiff)
+            _pos_x = cos(dog_spin_speed) * (xdiff)-sin(dog_spin_speed) * (ydiff)
                 + shepherd_x;
-            this->_pos_y = sin(spin_speed) * (xdiff) + cos(spin_speed) * (ydiff)
-                + shepherd_y;
+            _pos_y = sin(dog_spin_speed) * (xdiff)
+                + cos(dog_spin_speed) * (ydiff) + shepherd_y;
         }
     }
 }
@@ -397,7 +428,6 @@ void ground::update()
             {
                 animals[i]->interact(*animals[j]);
             }
-
     animals[0]->interact(*_shepherd);
 
     // updating the position and existance of the animal
@@ -408,7 +438,9 @@ void ground::update()
             if (!animals[i]->alive)
                 animals[i] = nullptr;
             else
+            {
                 animals[i]->move();
+            }
         }
     }
 
