@@ -24,7 +24,8 @@ constexpr unsigned frame_boundary = 100;
 constexpr int sheep_danger_dis = 40;
 constexpr int sheep_scare_speed = 5;
 constexpr int sheep_normal_speed = 5;
-constexpr unsigned sheep_offspring_counter = 100;
+constexpr int sheep_offspring_counter = 100;
+constexpr int sheep_offspring_dis = 40;
 // ---------- wolfs ---------------
 constexpr unsigned wolf_hunger_count = 300;
 constexpr int wolf_start_search_sheep_dis = 2000;
@@ -33,9 +34,6 @@ constexpr int wolf_eat_dis = 40;
 // ---------- shepherd dog --------
 constexpr float dog_spin_speed = 0.1; // 0 to 1
 constexpr int dog_dis_fr_shepherd = 5;
-// constexpr int angle_incre = 1;
-// constexpr int shepherd_x = 0;
-// constexpr int shepherd_y = 0;
 
 // Helper function to initialize SDL
 void init();
@@ -55,7 +53,7 @@ public:
     int _pos_x;
     int _pos_y;
     std::string _type;
-    std::map<std::string, std::any> _properties;
+    std::map<std::string, std::any> _props;
 
     moving_object(const std::string &file_path,
                   SDL_Surface *window_surface_ptr);
@@ -78,6 +76,8 @@ public:
 };
 class sheep : public animal
 {
+    int danger_y = 0;
+    int danger_x= 0;
     std::vector<bool> wolfs_nearby;
 
 public:
@@ -95,6 +95,7 @@ class shepherd_dog : public animal
     // int shepherd_y = 0;
     // int dis_fr_shepherd = 5;
     // int angle_incre = 1;
+    bool clockwise = true;
 
 public:
     shepherd_dog(SDL_Surface *window_surface_ptr);
@@ -148,7 +149,6 @@ public:
 class ground
 {
 private:
-    int new_members = 0;
     // Attention, NON-OWNING ptr, again to the screen
     SDL_Surface *window_surface_ptr_;
     // Some attribute to store all the wolves and sheep
@@ -157,6 +157,7 @@ private:
     std::vector<std::unique_ptr<animal>> animals;
 
 public:
+    int _new_members = 0;
     std::unique_ptr<shepherd> _shepherd;
 
     // ground() = default;

@@ -76,16 +76,16 @@ namespace
         }
         return pos;
     }
-    int get_distance_between_2_point(int pos_x_1, int pos_y_1, int pos_x_2,
-                                     int pos_y_2)
+    // calculate the distance between two objs
+    int get_dis_bet_2_objs(int pos_x_1, int pos_y_1, int pos_x_2, int pos_y_2)
     {
         int xdiff = pos_x_1 - pos_x_2;
         int ydiff = pos_y_1 - pos_y_2;
         return sqrt(xdiff * xdiff + ydiff * ydiff);
     }
-
-    float get_angle_between_2_point(int pos_x_1, int pos_y_1, int pos_x_2,
-                                    int pos_y_2)
+    // calculate the angle between two objs
+    float get_angle_bet_2_objs(int pos_x_1, int pos_y_1, int pos_x_2,
+                               int pos_y_2)
     {
         int xdiff = pos_x_1 - pos_x_2;
         int ydiff = pos_y_1 - pos_y_2;
@@ -134,11 +134,9 @@ sheep::sheep(SDL_Surface *window_surface_ptr)
     this->_pos_y = std::rand() % 50 + 200; // up || down
     this->_speed = sheep_normal_speed; // it's just the speed of the sheep
     std::string _genre = std::rand() % 2 == 0 ? "m" : "f";
-    _properties.insert(std::make_pair("genre", _genre));
-    _properties["offspring_counter"] = sheep_offspring_counter;
-    _properties["offspring"] = false;
-    _properties["offspring"] = false;
-    _properties["danger_x"] = 0;
+    _props.insert(std::make_pair("genre", _genre));
+    _props["offspring_counter"] = sheep_offspring_counter;
+    _props["offspring"] = false;
 }
 sheep::~sheep()
 {
@@ -150,24 +148,40 @@ sheep::~sheep()
 // the wolf.
 void sheep::interact(moving_object &obj)
 {
-    // std::cout << std::any_cast<std::string>(_properties["genre"]);
+    // std::cout << std::any_cast<std::string>(_props["genre"]);
+    int distance = get_dis_bet_2_objs(_pos_x, _pos_y, obj._pos_x, obj._pos_y);
     bool wolf_nearby = false;
     if (obj._type.compare("wolf") == 0)
     {
-        int distance = get_distance_between_2_point(this->_pos_x, this->_pos_y,
-                                                    obj._pos_x, obj._pos_y);
         if (distance < sheep_danger_dis + _width)
         {
-            _properties["danger_x"] = obj._pos_x;
-            _properties["danger_y"] = obj._pos_y;
+            danger_x = obj._pos_x;
+            danger_y = obj._pos_y;
             wolf_nearby = true;
         }
     }
-    if (obj._type.compare("sheep") == 0)
+    if (obj._type.compare("sheep") == 0 && distance < sheep_offspring_dis)
     {
-        // offspring
+        std::string genre = std::any_cast<std::string>(_props["genre"]);
+        std::string obj_genre = std::any_cast<std::string>(obj._props["genre"]);
+        if (genre.compare(obj_genre) != 0)
+            if (obj_genre.compare("f") == 0)
+            {
+                if (std::any_cast<int>(obj._props["offspring_counter"]) == 0)
+                {
+                    // std::cout << "offpring active\n";
+                    obj._props["offspring"] = true;
+                }
+            }
+            else
+            {
+                if (std::any_cast<int>(_props["offspring_counter"]) == 0)
+                {
+                    // std::cout << "offpring active\n";
+                    _props["offspring"] = true;
+                }
+            }
     }
-
     wolfs_nearby.push_back(wolf_nearby);
 }
 
@@ -176,11 +190,9 @@ void sheep::move()
     // if there are a wolf nearby then run !!!
     if (std::binary_search(wolfs_nearby.begin(), wolfs_nearby.end(), true))
     {
-        std::cout << " wolf nearly \n";
+        std::cout << " wolf nearby !! \n";
         _speed += sheep_scare_speed;
-        int w_x = std::any_cast<int>(_properties["danger_x"]);
-        int w_y = std::any_cast<int>(_properties["danger_y"]);
-        float angle = get_angle_between_2_point(_pos_x, _pos_y, w_x, w_y);
+        float angle = get_angle_bet_2_objs(_pos_x, _pos_y, danger_x, danger_y);
         if (_pos_x - _speed > 0)
             _pos_x -= _speed * cos(angle);
         if (_pos_y - _speed > 0)
@@ -193,9 +205,8 @@ void sheep::move()
         _pos_y = get_ran_pos(_pos_y, _speed, _height, frame_height);
         _pos_x = get_ran_pos(_pos_x, _speed, _width, frame_width);
     }
-    unsigned offspr_count =
-        std::any_cast<unsigned>(_properties["offspring_counter"]);
-    _properties["offspring_counter"] = offspr_count > 0 ? offspr_count - 1 : 0;
+    int offspr_count = std::any_cast<int>(_props["offspring_counter"]);
+    _props["offspring_counter"] = offspr_count > 0 ? offspr_count - 1 : 0;
 }
 
 // -------------------------------- wolfs class-----------
@@ -209,13 +220,13 @@ wolf::wolf(SDL_Surface *window_surface_ptr)
     this->_pos_x = std::rand() % 10 + 1000; // right  || left
     this->_pos_y = std::rand() % 10 + 400; // up || down
     this->_speed = 10;
-    _properties["search_sheep_dis"] = wolf_start_search_sheep_dis;
-    _properties["hunger_count"] = wolf_hunger_count;
-    _properties["run_away"] = false;
-    _properties["sheep_x"] = 0;
-    _properties["sheep_y"] = 0;
-    _properties["dog_x"] = 0;
-    _properties["dog_y"] = 0;
+    _props["search_sheep_dis"] = wolf_start_search_sheep_dis;
+    _props["hunger_count"] = wolf_hunger_count;
+    _props["run_away"] = false;
+    _props["sheep_x"] = 0;
+    _props["sheep_y"] = 0;
+    _props["dog_x"] = 0;
+    _props["dog_y"] = 0;
 }
 wolf::~wolf()
 {
@@ -223,71 +234,69 @@ wolf::~wolf()
 }
 void wolf::interact(moving_object &obj)
 {
-    int distance =
-        get_distance_between_2_point(_pos_x, _pos_y, obj._pos_x, obj._pos_y);
-    int search_dis = std::any_cast<int>(_properties["search_sheep_dis"]);
+    int distance = get_dis_bet_2_objs(_pos_x, _pos_y, obj._pos_x, obj._pos_y);
+    int search_dis = std::any_cast<int>(_props["search_sheep_dis"]);
     if (obj._type.compare("sheep") == 0) // look for the closest sheep
     {
         if (distance < search_dis)
         {
-            _properties["sheep_x"] = obj._pos_x;
-            _properties["sheep_y"] = obj._pos_y;
-            _properties["search_sheep_dis"] = distance;
+            _props["sheep_x"] = obj._pos_x;
+            _props["sheep_y"] = obj._pos_y;
+            _props["search_sheep_dis"] = distance;
         }
         if (distance < wolf_eat_dis) // eat sheep
         {
             obj.alive = false;
             // reset hunger count
-            _properties["hunger_count"] = wolf_hunger_count;
+            _props["hunger_count"] = wolf_hunger_count;
             // reset search distance
-            _properties["search_sheep_dis"] = wolf_start_search_sheep_dis;
-            _properties["sheep_x"] = 0;
-            _properties["sheep_y"] = 0;
+            _props["search_sheep_dis"] = wolf_start_search_sheep_dis;
+            _props["sheep_x"] = 0;
+            _props["sheep_y"] = 0;
         }
     }
     else if (obj._type.compare("shepherd_dog") == 0)
     {
         // std::cout << "interact dog\n";
-        _properties["run_away"] = false;
+        _props["run_away"] = false;
         if (distance < wolf_danger_dis)
         {
-            _properties["dog_x"] = obj._pos_x;
-            _properties["dog_y"] = obj._pos_y;
-            _properties["run_away"] = true;
+            _props["dog_x"] = obj._pos_x;
+            _props["dog_y"] = obj._pos_y;
+            _props["run_away"] = true;
         }
     }
 }
 void wolf::move()
 {
-    int dog_x = std::any_cast<int>(_properties["dog_x"]);
-    int dog_y = std::any_cast<int>(_properties["dog_y"]);
-    int sheep_x = std::any_cast<int>(_properties["sheep_x"]);
-    int sheep_y = std::any_cast<int>(_properties["sheep_y"]);
-    if (std::any_cast<bool>(_properties["run_away"])) // avoiding dog
+    int dog_x = std::any_cast<int>(_props["dog_x"]);
+    int dog_y = std::any_cast<int>(_props["dog_y"]);
+    int sheep_x = std::any_cast<int>(_props["sheep_x"]);
+    int sheep_y = std::any_cast<int>(_props["sheep_y"]);
+    if (std::any_cast<bool>(_props["run_away"])) // avoiding dog
     {
         std::cout << " run away dog \n";
-        float angle = get_angle_between_2_point(_pos_x, _pos_y, dog_x, dog_y);
+        float angle = get_angle_bet_2_objs(_pos_x, _pos_y, dog_x, dog_y);
         this->_pos_x -= this->_speed * cos(angle);
         this->_pos_y -= this->_speed * sin(angle);
     }
     else if (sheep_x != 0 && sheep_y != 0) // hunting for sheeps
     {
         // std::cout << "hunting sheeps \n";
-        float angle =
-            get_angle_between_2_point(_pos_x, _pos_y, sheep_x, sheep_y);
+        float angle = get_angle_bet_2_objs(_pos_x, _pos_y, sheep_x, sheep_y);
         this->_pos_x += this->_speed * cos(angle);
         this->_pos_y += this->_speed * sin(angle);
-        _properties["hunger_count"] =
-            std::any_cast<unsigned>(_properties["hunger_count"]) + 1;
-        _properties["search_sheep_dis"] = 2000; // reset distance to closest
+        _props["hunger_count"] =
+            std::any_cast<unsigned>(_props["hunger_count"]) + 1;
+        // reset distance
+        _props["search_sheep_dis"] = wolf_start_search_sheep_dis;
     }
     else
     {
         _pos_x = get_ran_pos(_pos_x, _speed, _width, frame_width);
         _pos_y = get_ran_pos(_pos_y, _speed, _height, frame_height);
     }
-    alive = std::any_cast<unsigned>(_properties["hunger_count"]) != 0 ? true
-                                                                      : false;
+    alive = std::any_cast<unsigned>(_props["hunger_count"]) != 0 ? true : false;
 }
 // -------------------------------- shepherd_dog class --------------
 
@@ -300,8 +309,8 @@ shepherd_dog::shepherd_dog(SDL_Surface *window_surface_ptr)
     this->_pos_x = std::rand() % 10 + 200; // right  || left
     this->_pos_y = std::rand() % 10 + 350; // up || down
     this->_speed = 10;
-    _properties["shepherd_x"] = 0;
-    _properties["shepherd_y"] = 0;
+    _props["shepherd_x"] = 0;
+    _props["shepherd_y"] = 0;
 }
 shepherd_dog::~shepherd_dog()
 {
@@ -312,36 +321,46 @@ void shepherd_dog::interact(moving_object &obj)
 {
     if (obj._type.compare("shepherd") == 0)
     {
-        _properties["shepherd_x"] = obj._pos_x;
-        _properties["shepherd_y"] = obj._pos_y;
+        _props["shepherd_x"] = obj._pos_x;
+        _props["shepherd_y"] = obj._pos_y;
     }
 }
 void shepherd_dog::move()
 {
-    int shepherd_x = std::any_cast<int>(_properties["shepherd_x"]);
-    int shepherd_y = std::any_cast<int>(_properties["shepherd_y"]);
+    int shepherd_x = std::any_cast<int>(_props["shepherd_x"]);
+    int shepherd_y = std::any_cast<int>(_props["shepherd_y"]);
 
     if (shepherd_x != 0 && shepherd_y != 0)
     {
         int xdiff = this->_pos_x - shepherd_x;
         int ydiff = this->_pos_y - shepherd_y;
         int distance = sqrt(xdiff * xdiff + ydiff * ydiff);
-
         if (distance < dog_dis_fr_shepherd)
         {
             float angle = atan2(ydiff, xdiff) * (180 / PI);
-            std::cout << distance << "   " << angle << "\n";
-
+            // std::cout << distance << "   " << angle << "\n";
             this->_pos_x += this->_speed * cos(angle);
             this->_pos_y += this->_speed * sin(angle);
-            std::cout << _pos_x << "  " << _pos_y << "\n";
+            // std::cout << _pos_x << "  " << _pos_y << "\n";
         }
-        else
+        else // TODO: apply direction rotation
         {
+            // clockwise rotation
             _pos_x = cos(dog_spin_speed) * (xdiff)-sin(dog_spin_speed) * (ydiff)
                 + shepherd_x;
             _pos_y = sin(dog_spin_speed) * (xdiff)
                 + cos(dog_spin_speed) * (ydiff) + shepherd_y;
+            if (_pos_x < 0 || _pos_x + _width > frame_width || _pos_y < 0
+                || _pos_y + _height > frame_height)
+                clockwise = !clockwise;
+            if (!clockwise)
+            {
+                // counter clockwise rotation
+                _pos_x = cos(dog_spin_speed) * (xdiff)
+                    + sin(dog_spin_speed) * (ydiff) + shepherd_x;
+                _pos_y = -sin(dog_spin_speed) * (xdiff)
+                    + cos(dog_spin_speed) * (ydiff) + shepherd_y;
+            }
         }
     }
 }
@@ -363,7 +382,7 @@ shepherd::~shepherd()
     std::cout << " player died !!!" << std::endl;
 }
 
-void shepherd::move(char direction) // TOTO: apply size
+void shepherd::move(char direction)
 {
     switch (direction)
     {
@@ -439,11 +458,30 @@ void ground::update()
                 animals[i] = nullptr;
             else
             {
+                if (animals[i]->_props.find("offspring")
+                    != animals[i]->_props.end())
+                {
+                    if (std::any_cast<bool>(animals[i]->_props["offspring"]))
+                    {
+                        // make new baby
+                        animals[i]->_props["offspring"] = false;
+                        animals[i]->_props["offspring_counter"] =
+                            sheep_offspring_counter;
+                        animals.resize(animals.size() + 1);
+                        animals[animals.size() - 1] =
+                            std::make_unique<sheep>(window_surface_ptr_);
+                        animals[animals.size() - 1]->_pos_x =
+                            animals[i]->_pos_x;
+                        animals[animals.size() - 1]->_pos_y =
+                            animals[i]->_pos_y;
+                        // std::cout << "offspring : " << animals.size() <<
+                        // "\n";
+                    }
+                }
                 animals[i]->move();
             }
         }
     }
-
     draw();
 }
 
@@ -509,11 +547,13 @@ int application::loop(unsigned period)
                 case SDLK_d:
                     direction = 'r';
                     break;
-                case SDL_MOUSEBUTTONUP:
-                    // get position
-                    break;
                 }
             }
+            if (window_event_.type == SDL_MOUSEBUTTONUP)
+            {
+                std::cout << "clicked : x = " << window_event_.button.x << "\n";
+            }
+
             if (window_event_.type == SDL_KEYUP)
             {
                 direction = 0;
