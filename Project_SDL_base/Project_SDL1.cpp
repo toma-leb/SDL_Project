@@ -309,8 +309,8 @@ shepherd_dog::shepherd_dog(SDL_Surface *window_surface_ptr)
     this->_pos_x = std::rand() % 10 + 200; // right  || left
     this->_pos_y = std::rand() % 10 + 350; // up || down
     this->_speed = 10;
-    _props["shepherd_x"] = 0;
-    _props["shepherd_y"] = 0;
+    _props["order_x"] = 0;
+    _props["order_y"] = 0;
 }
 shepherd_dog::~shepherd_dog()
 {
@@ -321,46 +321,76 @@ void shepherd_dog::interact(moving_object &obj)
 {
     if (obj._type.compare("shepherd") == 0)
     {
-        _props["shepherd_x"] = obj._pos_x;
-        _props["shepherd_y"] = obj._pos_y;
+        shepherd_x = obj._pos_x;
+        shepherd_y = obj._pos_y;
+        int order_x = std::any_cast<int>(obj._props["order_x"]);
+        int order_y = std::any_cast<int>(obj._props["order_y"]);
+        if (_pos_x == order_x && _pos_y == order_y)
+        {
+            obj._props["order_x"] = 0;
+            obj._props["order_x"] = 0; // reset to default
+        }
+        _props["order_x"] = obj._props["order_x"];
+        _props["order_y"] = obj._props["order_y"];
     }
 }
+void shepherd_dog::go_around_shepherd()
+{
+    int xdiff = this->_pos_x - shepherd_x;
+    int ydiff = this->_pos_y - shepherd_y;
+
+    // clockwise rotation
+    _pos_x = cos(dog_spin_speed) * (xdiff)-sin(dog_spin_speed) * (ydiff)
+        + shepherd_x;
+    _pos_y = sin(dog_spin_speed) * (xdiff) + cos(dog_spin_speed) * (ydiff)
+        + shepherd_y;
+    if (_pos_x < 0 || _pos_x + _width > frame_width || _pos_y < 0
+        || _pos_y + _height > frame_height)
+        clockwise = !clockwise;
+    if (!clockwise)
+    {
+        // counter clockwise rotation
+        _pos_x = cos(dog_spin_speed) * (xdiff) + sin(dog_spin_speed) * (ydiff)
+            + shepherd_x;
+        _pos_y = -sin(dog_spin_speed) * (xdiff) + cos(dog_spin_speed) * (ydiff)
+            + shepherd_y;
+    }
+}
+// void shepherd_dog::follow_shepherd();
+// void shepherd_dog::follow_order();
 void shepherd_dog::move()
 {
-    int shepherd_x = std::any_cast<int>(_props["shepherd_x"]);
-    int shepherd_y = std::any_cast<int>(_props["shepherd_y"]);
-
-    if (shepherd_x != 0 && shepherd_y != 0)
+    int order_x = std::any_cast<int>(_props["order_x"]);
+    int order_y = std::any_cast<int>(_props["order_y"]);
+    if (order_x != 0 && order_y != 0) // order
     {
-        int xdiff = this->_pos_x - shepherd_x;
-        int ydiff = this->_pos_y - shepherd_y;
-        int distance = sqrt(xdiff * xdiff + ydiff * ydiff);
-        if (distance < dog_dis_fr_shepherd)
+        if (get_dis_bet_2_objs(_pos_x, _pos_y, order_x, order_y) < 10)
         {
-            float angle = atan2(ydiff, xdiff) * (180 / PI);
-            // std::cout << distance << "   " << angle << "\n";
-            this->_pos_x += this->_speed * cos(angle);
-            this->_pos_y += this->_speed * sin(angle);
-            // std::cout << _pos_x << "  " << _pos_y << "\n";
+            this->_pos_x = order_x;
+            this->_pos_y = order_y;
         }
-        else // TODO: apply direction rotation
+        else
         {
-            // clockwise rotation
-            _pos_x = cos(dog_spin_speed) * (xdiff)-sin(dog_spin_speed) * (ydiff)
-                + shepherd_x;
-            _pos_y = sin(dog_spin_speed) * (xdiff)
-                + cos(dog_spin_speed) * (ydiff) + shepherd_y;
-            if (_pos_x < 0 || _pos_x + _width > frame_width || _pos_y < 0
-                || _pos_y + _height > frame_height)
-                clockwise = !clockwise;
-            if (!clockwise)
-            {
-                // counter clockwise rotation
-                _pos_x = cos(dog_spin_speed) * (xdiff)
-                    + sin(dog_spin_speed) * (ydiff) + shepherd_x;
-                _pos_y = -sin(dog_spin_speed) * (xdiff)
-                    + cos(dog_spin_speed) * (ydiff) + shepherd_y;
-            }
+            float angle = get_angle_bet_2_objs(_pos_x, _pos_y, order_x, order_y)
+                * PI / 180;
+            this->_pos_x -= this->_speed * cos(angle);
+            this->_pos_y -= this->_speed * sin(angle);
+        }
+    }
+    else if (shepherd_x != 0 && shepherd_y != 0)
+    {
+        int xdiff = _pos_x - shepherd_x;
+        int ydiff = _pos_y - shepherd_y;
+        int distance = sqrt(xdiff * xdiff + ydiff * ydiff);
+        if (distance > dog_dis_fr_shepherd)
+        {
+            float angle = atan2(ydiff, xdiff);
+            this->_pos_x -= this->_speed * cos(angle);
+            this->_pos_y -= this->_speed * sin(angle);
+        }
+        else
+        {
+            this->go_around_shepherd();
         }
     }
 }
@@ -375,13 +405,19 @@ shepherd::shepherd(SDL_Surface *window_surface_ptr)
     this->_pos_x = std::rand() % 10 + 100; // right  || left
     this->_pos_y = std::rand() % 10 + 400; // up || down
     this->_speed = 10;
+    _props["order_x"] = 0;
+    _props["order_y"] = 0;
     std::cout << "new player created \n";
 }
 shepherd::~shepherd()
 {
     std::cout << " player died !!!" << std::endl;
 }
-
+void shepherd::get_order(int pos_x, int pos_y)
+{
+    _props["order_x"] = pos_x;
+    _props["order_y"] = pos_y;
+}
 void shepherd::move(char direction)
 {
     switch (direction)
@@ -474,8 +510,6 @@ void ground::update()
                             animals[i]->_pos_x;
                         animals[animals.size() - 1]->_pos_y =
                             animals[i]->_pos_y;
-                        // std::cout << "offspring : " << animals.size() <<
-                        // "\n";
                     }
                 }
                 animals[i]->move();
@@ -551,7 +585,11 @@ int application::loop(unsigned period)
             }
             if (window_event_.type == SDL_MOUSEBUTTONUP)
             {
-                std::cout << "clicked : x = " << window_event_.button.x << "\n";
+                // std::cout << "clicked : x = " << window_event_.button.x <<
+                // "\n"; std::cout << "clicked : y = " << window_event_.button.y
+                // << "\n";
+                _ground->_shepherd->get_order(window_event_.button.x,
+                                              window_event_.button.y);
             }
 
             if (window_event_.type == SDL_KEYUP)
@@ -559,7 +597,6 @@ int application::loop(unsigned period)
                 direction = 0;
             }
         }
-        // direction = 'u';
         _ground->_shepherd->move(direction);
         int frame_update = SDL_GetTicks() - frameStart;
         if (frame_time > frame_update)

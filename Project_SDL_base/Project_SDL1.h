@@ -33,7 +33,7 @@ constexpr int wolf_danger_dis = 90;
 constexpr int wolf_eat_dis = 40;
 // ---------- shepherd dog --------
 constexpr float dog_spin_speed = 0.1; // 0 to 1
-constexpr int dog_dis_fr_shepherd = 5;
+constexpr int dog_dis_fr_shepherd = 150;
 
 // Helper function to initialize SDL
 void init();
@@ -77,7 +77,7 @@ public:
 class sheep : public animal
 {
     int danger_y = 0;
-    int danger_x= 0;
+    int danger_x = 0;
     std::vector<bool> wolfs_nearby;
 
 public:
@@ -90,11 +90,8 @@ public:
 class shepherd_dog : public animal
 {
     // Ctor
-    // float spin_speed = 0.1; // 0 to 1
-    // int shepherd_x = 0;
-    // int shepherd_y = 0;
-    // int dis_fr_shepherd = 5;
-    // int angle_incre = 1;
+    int shepherd_x = 0;
+    int shepherd_y = 0;
     bool clockwise = true;
 
 public:
@@ -107,6 +104,8 @@ public:
     // void follow_shepherd_move(int shepherd_x, int shepherd_y);
 
     virtual void interact(moving_object &obj) override;
+
+    void go_around_shepherd();
 };
 
 // class wolf, derived from animal
@@ -142,7 +141,7 @@ public:
     ~shepherd(); // Dtor, again for clean up (if necessary)
 
     void move(char direction);
-    void order(int pos_x, int pos_y, moving_object &obj);
+    void get_order(int pos_x, int pos_y);
 };
 
 // The "ground" on which all the animals live
