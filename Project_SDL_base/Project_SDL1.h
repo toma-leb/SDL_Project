@@ -34,6 +34,7 @@ constexpr int wolf_eat_dis = 40;
 // ---------- shepherd dog --------
 constexpr float dog_spin_speed = 0.1; // 0 to 1
 constexpr int dog_dis_fr_shepherd = 150;
+constexpr int dog_dis_fr_order = 10;
 
 // Helper function to initialize SDL
 void init();
@@ -76,8 +77,8 @@ public:
 };
 class sheep : public animal
 {
-    int danger_y = 0;
-    int danger_x = 0;
+    int wolf_x = 0;
+    int wolf_y = 0;
     std::vector<bool> wolfs_nearby;
 
 public:

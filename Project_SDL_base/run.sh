@@ -2,8 +2,8 @@
 
 BUILD=build
 MEDIA=media
-nbr_sheeps=2
-nbr_wolfs=0
+nbr_sheeps=1
+nbr_wolfs=1
 duration=10
 
 if [ ! -d "$BUILD" ]; then

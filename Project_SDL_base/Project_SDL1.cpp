@@ -92,6 +92,48 @@ namespace
         return atan2(ydiff, xdiff) * (180 / PI);
     }
 
+    float get_angle_bet_2_objs_rad(int pos_x_1, int pos_y_1, int pos_x_2,
+                                   int pos_y_2)
+    {
+        int xdiff = pos_x_1 - pos_x_2;
+        int ydiff = pos_y_1 - pos_y_2;
+        return atan2(ydiff, xdiff);
+    }
+    // calcul the next pos to get closer to or (far away from run_away = false)
+    // the destination position
+    void get_next_pos_to_des(int &pos_x, int &pos_y, int des_x, int des_y,
+                             int speed, int a_height, int a_width,
+                             bool run_away = false)
+    {
+        float angle = get_angle_bet_2_objs_rad(pos_x, pos_y, des_x, des_y);
+        int direc = -1; // go
+        if (run_away)
+            direc = 1; // run away
+        int next_x = pos_x + direc * speed * cos(angle);
+        int next_y = pos_y + direc * speed * sin(angle);
+        if (next_x > 0 && next_x + a_width < frame_width)
+            pos_x = next_x;
+        if (next_y > 0 && next_y + a_height < frame_height)
+            pos_y = next_y;
+        // if (pos_x - speed * cos(angle) > 0
+        //     && pos_x - speed * cos(angle) + a_width < frame_width)
+        //     pos_x -= speed * cos(angle);
+        // if (pos_y - speed * sin(angle) > 0
+        //     && pos_x - speed * sin(angle) + a_height < frame_height)
+        //     pos_y -= speed * sin(angle);
+    }
+    // void run_away_fr_des(int &pos_x, int &pos_y, int des_x, int des_y,
+    //                      int speed, int a_height, int a_width)
+    // {
+    //     float angle = get_angle_bet_2_objs_rad(pos_x, pos_y, des_x, des_y);
+    //     int next_x = pos_x + speed * cos(angle);
+    //     int next_y = pos_y + speed * sin(angle);
+    //     if (next_x > 0 && next_x + a_width < frame_width)
+    //         pos_x = next_x;
+    //     if (next_y > 0 && next_y + a_height < frame_height)
+    //         pos_y = next_y;
+    // }
+
 } // namespace
 // -------------- moving object class -----------------
 moving_object::moving_object(const std::string &file_path,
@@ -155,8 +197,8 @@ void sheep::interact(moving_object &obj)
     {
         if (distance < sheep_danger_dis + _width)
         {
-            danger_x = obj._pos_x;
-            danger_y = obj._pos_y;
+            wolf_x = obj._pos_x;
+            wolf_y = obj._pos_y;
             wolf_nearby = true;
         }
     }
@@ -192,11 +234,8 @@ void sheep::move()
     {
         std::cout << " wolf nearby !! \n";
         _speed += sheep_scare_speed;
-        float angle = get_angle_bet_2_objs(_pos_x, _pos_y, danger_x, danger_y);
-        if (_pos_x - _speed > 0)
-            _pos_x -= _speed * cos(angle);
-        if (_pos_y - _speed > 0)
-            _pos_y -= _speed * sin(angle);
+        get_next_pos_to_des(_pos_x, _pos_y, wolf_x, wolf_y, _speed, _height,
+                            _width, true);
         wolfs_nearby.clear();
     }
     else
@@ -236,9 +275,9 @@ void wolf::interact(moving_object &obj)
 {
     int distance = get_dis_bet_2_objs(_pos_x, _pos_y, obj._pos_x, obj._pos_y);
     int search_dis = std::any_cast<int>(_props["search_sheep_dis"]);
-    if (obj._type.compare("sheep") == 0) // look for the closest sheep
+    if (obj._type.compare("sheep") == 0)
     {
-        if (distance < search_dis)
+        if (distance < search_dis) // look for the closest sheep
         {
             _props["sheep_x"] = obj._pos_x;
             _props["sheep_y"] = obj._pos_y;
@@ -275,19 +314,15 @@ void wolf::move()
     int sheep_y = std::any_cast<int>(_props["sheep_y"]);
     if (std::any_cast<bool>(_props["run_away"])) // avoiding dog
     {
-        std::cout << " run away dog \n";
-        float angle = get_angle_bet_2_objs(_pos_x, _pos_y, dog_x, dog_y);
-        this->_pos_x -= this->_speed * cos(angle);
-        this->_pos_y -= this->_speed * sin(angle);
+        get_next_pos_to_des(_pos_x, _pos_y, sheep_x, sheep_y, _speed, _height,
+                            _width, true);
     }
     else if (sheep_x != 0 && sheep_y != 0) // hunting for sheeps
     {
-        // std::cout << "hunting sheeps \n";
-        float angle = get_angle_bet_2_objs(_pos_x, _pos_y, sheep_x, sheep_y);
-        this->_pos_x += this->_speed * cos(angle);
-        this->_pos_y += this->_speed * sin(angle);
+        get_next_pos_to_des(_pos_x, _pos_y, sheep_x, sheep_y, _speed, _height,
+                            _width);
         _props["hunger_count"] =
-            std::any_cast<unsigned>(_props["hunger_count"]) + 1;
+            std::any_cast<unsigned>(_props["hunger_count"]) - 1;
         // reset distance
         _props["search_sheep_dis"] = wolf_start_search_sheep_dis;
     }
@@ -356,37 +391,37 @@ void shepherd_dog::go_around_shepherd()
             + shepherd_y;
     }
 }
-// void shepherd_dog::follow_shepherd();
-// void shepherd_dog::follow_order();
 void shepherd_dog::move()
 {
     int order_x = std::any_cast<int>(_props["order_x"]);
     int order_y = std::any_cast<int>(_props["order_y"]);
     if (order_x != 0 && order_y != 0) // order
     {
-        if (get_dis_bet_2_objs(_pos_x, _pos_y, order_x, order_y) < 10)
+        if (get_dis_bet_2_objs(_pos_x, _pos_y, order_x, order_y)
+            < dog_dis_fr_order)
         {
             this->_pos_x = order_x;
             this->_pos_y = order_y;
         }
         else
         {
-            float angle = get_angle_bet_2_objs(_pos_x, _pos_y, order_x, order_y)
-                * PI / 180;
-            this->_pos_x -= this->_speed * cos(angle);
-            this->_pos_y -= this->_speed * sin(angle);
+            get_next_pos_to_des(_pos_x, _pos_y, order_x, order_y, _speed,
+                                _height, _width);
         }
     }
     else if (shepherd_x != 0 && shepherd_y != 0)
     {
-        int xdiff = _pos_x - shepherd_x;
-        int ydiff = _pos_y - shepherd_y;
-        int distance = sqrt(xdiff * xdiff + ydiff * ydiff);
+        // int xdiff = _pos_x - shepherd_x;
+        // int ydiff = _pos_y - shepherd_y;
+        int distance =
+            get_dis_bet_2_objs(_pos_x, _pos_y, shepherd_x, shepherd_y);
         if (distance > dog_dis_fr_shepherd)
         {
-            float angle = atan2(ydiff, xdiff);
-            this->_pos_x -= this->_speed * cos(angle);
-            this->_pos_y -= this->_speed * sin(angle);
+            // float angle = atan2(ydiff, xdiff);
+            // this->_pos_x -= this->_speed * cos(angle);
+            // this->_pos_y -= this->_speed * sin(angle);
+            get_next_pos_to_des(_pos_x, _pos_y, order_x, order_y, _speed,
+                                _height, _width);
         }
         else
         {
