@@ -262,10 +262,10 @@ wolf::wolf(SDL_Surface *window_surface_ptr)
     _props["search_sheep_dis"] = wolf_start_search_sheep_dis;
     _props["hunger_count"] = wolf_hunger_count;
     _props["run_away"] = false;
-    _props["sheep_x"] = 0;
-    _props["sheep_y"] = 0;
-    _props["dog_x"] = 0;
-    _props["dog_y"] = 0;
+    // _props["sheep_x"] = 0;
+    // _props["sheep_y"] = 0;
+    // _props["dog_x"] = 0;
+    // _props["dog_y"] = 0;
 }
 wolf::~wolf()
 {
@@ -279,8 +279,11 @@ void wolf::interact(moving_object &obj)
     {
         if (distance < search_dis) // look for the closest sheep
         {
-            _props["sheep_x"] = obj._pos_x;
-            _props["sheep_y"] = obj._pos_y;
+            sheep_x = obj._pos_x;
+            sheep_y = obj._pos_y;
+
+            // _props["sheep_x"] = obj._pos_x;
+            // _props["sheep_y"] = obj._pos_y;
             _props["search_sheep_dis"] = distance;
         }
         if (distance < wolf_eat_dis) // eat sheep
@@ -290,8 +293,10 @@ void wolf::interact(moving_object &obj)
             _props["hunger_count"] = wolf_hunger_count;
             // reset search distance
             _props["search_sheep_dis"] = wolf_start_search_sheep_dis;
-            _props["sheep_x"] = 0;
-            _props["sheep_y"] = 0;
+            sheep_x = 0;
+            sheep_y = 0;
+            // _props["sheep_x"] = 0;
+            // _props["sheep_y"] = 0;
         }
     }
     else if (obj._type.compare("shepherd_dog") == 0)
@@ -300,21 +305,23 @@ void wolf::interact(moving_object &obj)
         _props["run_away"] = false;
         if (distance < wolf_danger_dis)
         {
-            _props["dog_x"] = obj._pos_x;
-            _props["dog_y"] = obj._pos_y;
+            dog_x = obj._pos_x;
+            dog_y = obj._pos_y;
+            // _props["dog_x"] = obj._pos_x;
+            // _props["dog_y"] = obj._pos_y;
             _props["run_away"] = true;
         }
     }
 }
 void wolf::move()
 {
-    int dog_x = std::any_cast<int>(_props["dog_x"]);
-    int dog_y = std::any_cast<int>(_props["dog_y"]);
-    int sheep_x = std::any_cast<int>(_props["sheep_x"]);
-    int sheep_y = std::any_cast<int>(_props["sheep_y"]);
+    // int dog_x = std::any_cast<int>(_props["dog_x"]);
+    // int dog_y = std::any_cast<int>(_props["dog_y"]);
+    // int sheep_x = std::any_cast<int>(_props["sheep_x"]);
+    // int sheep_y = std::any_cast<int>(_props["sheep_y"]);
     if (std::any_cast<bool>(_props["run_away"])) // avoiding dog
     {
-        get_next_pos_to_des(_pos_x, _pos_y, sheep_x, sheep_y, _speed, _height,
+        get_next_pos_to_des(_pos_x, _pos_y, dog_x, dog_y, _speed, _height,
                             _width, true);
     }
     else if (sheep_x != 0 && sheep_y != 0) // hunting for sheeps

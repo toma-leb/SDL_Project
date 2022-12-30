@@ -116,13 +116,13 @@ class wolf : public animal
     // unsigned int dead_time = 2000;
     // int closest_sheep_dis = 2000;
     // int eat_dis = 40;
-    // int sheep_x = 0;
-    // int sheep_y = 0;
+    int sheep_x = 0;
+    int sheep_y = 0;
     // int _hunger_count = hunger_count;
 
     // int danger_dis = 90;
-    // int dog_x = 0;
-    // int dog_y = 0;
+    int dog_x = 0;
+    int dog_y = 0;
     // bool run_away = false;
 
 public:
