@@ -2,9 +2,20 @@
 
 BUILD=build
 MEDIA=media
-nbr_sheeps=1
-nbr_wolfs=1
+nbr_sheeps=2
+nbr_wolfs=2
 duration=10
+
+if [ $# -gt 0 ]; then
+    nbr_sheeps=$1
+    if [ $# -gt 1 ]; then
+        nbr_wolfs=$2
+        if [ $# -gt 2 ]; then
+            duration=$3
+        fi
+    fi
+fi
+
 
 if [ ! -d "$BUILD" ]; then
     mkdir $BUILD

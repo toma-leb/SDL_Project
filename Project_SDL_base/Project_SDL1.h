@@ -22,10 +22,10 @@ constexpr unsigned frame_boundary = 100;
 // Animals default properties
 // ---------- sheeps --------------
 constexpr int sheep_danger_dis = 40;
-constexpr int sheep_scare_speed = 5;
+constexpr int sheep_addition_speed = 5;
 constexpr int sheep_normal_speed = 5;
 constexpr int sheep_offspring_counter = 100;
-constexpr int sheep_offspring_dis = 40;
+constexpr int sheep_offspring_dis = 40; // collision detection for the offspring
 // ---------- wolfs ---------------
 constexpr unsigned wolf_hunger_count = 300;
 constexpr int wolf_start_search_sheep_dis = 2000;
@@ -34,7 +34,7 @@ constexpr int wolf_eat_dis = 40;
 // ---------- shepherd dog --------
 constexpr float dog_spin_speed = 0.1; // 0 to 1
 constexpr int dog_dis_fr_shepherd = 150;
-constexpr int dog_dis_fr_order = 10;
+constexpr int dog_dis_fr_order = 10; // the distance between the dog and the position ordered
 
 // Helper function to initialize SDL
 void init();
@@ -60,9 +60,7 @@ public:
                   SDL_Surface *window_surface_ptr);
     virtual ~moving_object(); // Use the destructor to release memory and
     virtual void draw();
-    // virtual void interact(std::unique_ptr<moving_object> &obj);
 
-    // virtual void move(){};
 };
 class animal : public moving_object
 {
@@ -79,7 +77,7 @@ class sheep : public animal
 {
     int wolf_x = 0;
     int wolf_y = 0;
-    std::vector<bool> wolfs_nearby;
+    std::vector<bool> wolfs_nearby; // list of the wolfs that is near the sheep
 
 public:
     sheep(SDL_Surface *window_surface_ptr);
@@ -93,7 +91,7 @@ class shepherd_dog : public animal
     // Ctor
     int shepherd_x = 0;
     int shepherd_y = 0;
-    bool clockwise = true;
+    bool clockwise = true; //  the rotate's direction of dog
 
 public:
     shepherd_dog(SDL_Surface *window_surface_ptr);
@@ -101,8 +99,6 @@ public:
     virtual ~shepherd_dog() override;
 
     virtual void move() override;
-
-    // void follow_shepherd_move(int shepherd_x, int shepherd_y);
 
     virtual void interact(moving_object &obj) override;
 
@@ -113,17 +109,10 @@ public:
 class wolf : public animal
 {
     // Ctor
-    // unsigned int dead_time = 2000;
-    // int closest_sheep_dis = 2000;
-    // int eat_dis = 40;
     int sheep_x = 0;
     int sheep_y = 0;
-    // int _hunger_count = hunger_count;
-
-    // int danger_dis = 90;
     int dog_x = 0;
     int dog_y = 0;
-    // bool run_away = false;
 
 public:
     wolf(SDL_Surface *window_surface_ptr);
@@ -149,9 +138,7 @@ public:
 class ground
 {
 private:
-    // Attention, NON-OWNING ptr, again to the screen
     SDL_Surface *window_surface_ptr_;
-    // Some attribute to store all the wolves and sheep
     unsigned _n_sheep;
     unsigned _n_wolf;
     std::vector<std::unique_ptr<animal>> animals;
@@ -159,8 +146,6 @@ private:
 public:
     int _new_members = 0;
     std::unique_ptr<shepherd> _shepherd;
-
-    // ground() = default;
     ground(SDL_Surface *); // Ctor
 
     ~ground(){}; // Dtor, again for clean up (if necessary)
@@ -170,22 +155,18 @@ public:
 
     void update(); // "refresh the screen": Move animals and draw them
 
-    // Possibly other methods, depends on your implementation
+    void offspring_check(unsigned index);
 };
 
 // The application class, which is in charge of generating the window
 class application
 {
 private:
-    // The following are OWNING ptrs
     SDL_Window *window_ptr_;
     SDL_Surface *window_surface_ptr_;
     SDL_Event window_event_;
 
-    // Other attributes here, for example an instance of ground
-    std::unique_ptr<ground> _ground; // TODO
-    unsigned application_h = frame_height;
-    unsigned application_w = frame_width;
+    std::unique_ptr<ground> _ground;
 
 public:
     application(unsigned n_sheep, unsigned n_wolf); // Ctor
