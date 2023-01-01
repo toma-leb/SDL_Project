@@ -12,7 +12,6 @@
 #include <numeric>
 #include <random>
 #include <string>
-#define PI 3.14159265
 
 void init()
 {
@@ -364,10 +363,8 @@ void shepherd_dog::move()
             this->_pos_y = order_y;
         }
         else
-        {
             get_next_pos_to_des(_pos_x, _pos_y, order_x, order_y, _speed,
                                 _height, _width);
-        }
     }
     else if (shepherd_x != 0 && shepherd_y != 0)
     {
@@ -503,34 +500,12 @@ void ground::update()
         }
     }
     draw();
-    // interacting between animals
-    // for (unsigned i = 0; i < animals.size(); i++)
-    //     for (unsigned j = 0; j < animals.size(); j++)
-    //         if (i != j && animals[i] && animals[j])
-    //         {
-    //             animals[i]->interact(*animals[j]);
-    //             animals[i]->interact(*_shepherd);
-    //         }
-
-    // // updating the position and existance of the animal
-    // for (unsigned i = 0; i < animals.size(); i++)
-    // {
-    //     if (animals[i])
-    //     {
-    //         if (!animals[i]->alive)
-    //             animals[i] = nullptr;
-    //         else
-    //         {
-    //             animals[i]->move();
-    //         }
-    //     }
-    // }
 }
 
 // application
 application::application(unsigned n_sheep, unsigned n_wolf)
 {
-    window_ptr_ = SDL_CreateWindow("SDL2 Window", SDL_WINDOWPOS_CENTERED,
+    window_ptr_ = SDL_CreateWindow("Project SDL EPITA", SDL_WINDOWPOS_CENTERED,
                                    SDL_WINDOWPOS_CENTERED, frame_width,
                                    frame_height, SDL_WINDOW_SHOWN);
 
@@ -565,7 +540,6 @@ int application::loop(unsigned period)
     while (!quit && (SDL_GetTicks() - lastUpdateTime < period * 1000))
     {
         frameStart = SDL_GetTicks();
-
         while (SDL_PollEvent(&window_event_))
         {
             if (window_event_.type == SDL_QUIT)
@@ -592,15 +566,11 @@ int application::loop(unsigned period)
                 }
             }
             if (window_event_.type == SDL_MOUSEBUTTONUP)
-            {
                 _ground->_shepherd->get_order(window_event_.button.x,
                                               window_event_.button.y);
-            }
 
             if (window_event_.type == SDL_KEYUP)
-            {
                 direction = 0;
-            }
         }
         _ground->_shepherd->move(direction);
         int frame_update = SDL_GetTicks() - frameStart;
