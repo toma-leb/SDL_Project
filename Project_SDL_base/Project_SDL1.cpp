@@ -56,7 +56,7 @@ namespace
         return op_surface_ptr;
     }
 
-    // genarate a pos_x or pos_y, with speed = a_speed,
+    // generate a pos_x or pos_y, with speed = a_speed,
     // limit = frame_width or frame_height,
     // var = a_width or a_height
     int get_ran_pos(int pos, int speed, int var, int limit)
@@ -108,6 +108,28 @@ namespace
             pos_x = next_x;
         if (next_y > 0 && next_y + a_height < frame_height)
             pos_y = next_y;
+    }
+    // calcul the next pos to go around a center
+    // clockwise is rotation's direction
+    // speed is in rad (0 to 1)
+    void get_next_pos_around_cent(int &pos_x, int &pos_y, int cent_x,
+                                  int cent_y, double speed, int height,
+                                  int width, bool &clockwise)
+    {
+        int xdiff = pos_x - cent_x;
+        int ydiff = pos_y - cent_y;
+        // clockwise rotation
+        pos_x = cos(speed) * (xdiff)-sin(speed) * (ydiff) + cent_x;
+        pos_y = sin(speed) * (xdiff) + cos(speed) * (ydiff) + cent_y;
+        if (pos_x < 0 || pos_x + width > frame_width || pos_y < 0
+            || pos_y + height > frame_height)
+            clockwise = !clockwise;
+        if (!clockwise)
+        {
+            // counter clockwise rotation
+            pos_x = cos(speed) * (xdiff) + sin(speed) * (ydiff) + cent_x;
+            pos_y = -sin(speed) * (xdiff) + cos(speed) * (ydiff) + cent_y;
+        }
     }
 
 } // namespace
@@ -330,28 +352,30 @@ void shepherd_dog::interact(moving_object &obj)
         _props["order_y"] = obj._props["order_y"];
     }
 }
-void shepherd_dog::go_around_shepherd()
-{
-    int xdiff = this->_pos_x - shepherd_x;
-    int ydiff = this->_pos_y - shepherd_y;
+// void shepherd_dog::go_around_shepherd()
+// {
+    // int xdiff = this->_pos_x - shepherd_x;
+    // int ydiff = this->_pos_y - shepherd_y;
 
-    // clockwise rotation
-    _pos_x = cos(dog_spin_speed) * (xdiff)-sin(dog_spin_speed) * (ydiff)
-        + shepherd_x;
-    _pos_y = sin(dog_spin_speed) * (xdiff) + cos(dog_spin_speed) * (ydiff)
-        + shepherd_y;
-    if (_pos_x < 0 || _pos_x + _width > frame_width || _pos_y < 0
-        || _pos_y + _height > frame_height)
-        clockwise = !clockwise;
-    if (!clockwise)
-    {
-        // counter clockwise rotation
-        _pos_x = cos(dog_spin_speed) * (xdiff) + sin(dog_spin_speed) * (ydiff)
-            + shepherd_x;
-        _pos_y = -sin(dog_spin_speed) * (xdiff) + cos(dog_spin_speed) * (ydiff)
-            + shepherd_y;
-    }
-}
+    // // clockwise rotation
+    // _pos_x = cos(dog_spin_speed) * (xdiff)-sin(dog_spin_speed) * (ydiff)
+    //     + shepherd_x;
+    // _pos_y = sin(dog_spin_speed) * (xdiff) + cos(dog_spin_speed) * (ydiff)
+    //     + shepherd_y;
+    // if (_pos_x < 0 || _pos_x + _width > frame_width || _pos_y < 0
+    //     || _pos_y + _height > frame_height)
+    //     clockwise = !clockwise;
+    // if (!clockwise)
+    // {
+    //     // counter clockwise rotation
+    //     _pos_x = cos(dog_spin_speed) * (xdiff) + sin(dog_spin_speed) *
+    //     (ydiff)
+    //         + shepherd_x;
+    //     _pos_y = -sin(dog_spin_speed) * (xdiff) + cos(dog_spin_speed) *
+    //     (ydiff)
+    //         + shepherd_y;
+    // }
+// }
 void shepherd_dog::move()
 {
     int order_x = std::any_cast<int>(_props["order_x"]);
@@ -376,7 +400,10 @@ void shepherd_dog::move()
             get_next_pos_to_des(_pos_x, _pos_y, shepherd_x, shepherd_y, _speed,
                                 _height, _width);
         else
-            this->go_around_shepherd();
+            get_next_pos_around_cent(this->_pos_x, _pos_y, shepherd_x,
+                                     shepherd_y, dog_spin_speed, _height,
+                                     _width, clockwise);
+        // this->go_around_shepherd();
     }
 }
 
@@ -553,16 +580,16 @@ int application::loop(unsigned period)
             {
                 switch (window_event_.key.keysym.sym)
                 {
-                case SDLK_z:
+                case SDLK_z: case SDLK_UP:
                     direction = 'u';
                     break;
-                case SDLK_s:
+                case SDLK_s:case SDLK_DOWN:
                     direction = 'd';
                     break;
-                case SDLK_q:
+                case SDLK_q:case SDLK_LEFT:
                     direction = 'l';
                     break;
-                case SDLK_d:
+                case SDLK_d:case SDLK_RIGHT:
                     direction = 'r';
                     break;
                 }

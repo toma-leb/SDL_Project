@@ -13,7 +13,7 @@
 #include <vector>
 
 // Defintions
-constexpr double frame_rate = 60.0; // refresh rate
+constexpr double frame_rate = 30.0; // refresh rate
 constexpr double frame_time = 1000. / frame_rate;
 constexpr unsigned frame_width = 1400; // Width of window in pixel
 constexpr unsigned frame_height = 900; // Height of window in pixel
@@ -77,7 +77,8 @@ class sheep : public animal
 {
     int wolf_x = 0;
     int wolf_y = 0;
-    std::vector<bool> wolfs_nearby; // list of the wolfs that is near the sheep
+    // list of the wolfs that is near the sheep
+    std::vector<bool> wolfs_nearby; 
 
 public:
     sheep(SDL_Surface *window_surface_ptr);
@@ -91,7 +92,8 @@ class shepherd_dog : public animal
     // Ctor
     int shepherd_x = 0;
     int shepherd_y = 0;
-    bool clockwise = true; //  the rotate's direction of dog
+    bool clockwise = true; 
+    //  the rotate's direction of dog
 
 public:
     shepherd_dog(SDL_Surface *window_surface_ptr);
@@ -102,7 +104,7 @@ public:
 
     virtual void interact(moving_object &obj) override;
 
-    void go_around_shepherd();
+    // void go_around_shepherd();
 };
 
 // class wolf, derived from animal
@@ -144,7 +146,6 @@ private:
     std::vector<std::unique_ptr<animal>> animals;
 
 public:
-    int _new_members = 0;
     std::unique_ptr<shepherd> _shepherd;
     ground(SDL_Surface *); // Ctor
 
