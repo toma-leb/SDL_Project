@@ -26,6 +26,8 @@ onto the given surface.
 returns the time passed since initialization in milliseconds, SDL Delay(x) blocks the
 execution for x milliseconds.
 ## 3.Needed classes and their structure
+![Alt text](hiearchy.png)
+
 • animal a base class for all animals. As all animals need to be drawn onto the screen,
 they need a texture (SDL Surface loaded from image), a position (in x and y), a method
 draw, that allows to draw them to a given screen, a finally virtual method defining the
