@@ -37,14 +37,16 @@ namespace
                                   SDL_Surface *window_surface_ptr)
     {
         // Helper function to load a png for a specific surface
-        auto surf = IMG_Load(path.c_str());
-        // auto surf = SDL_LoadBMP(path.c_str());
+        // auto surf = IMG_Load(path.c_str());
+        auto surf = SDL_LoadBMP(path.c_str());
         if (!surf)
             throw std::runtime_error("Could not load image");
-        // See SDL_ConvertSurface
 
         auto op_surface_ptr =
             SDL_ConvertSurface(surf, window_surface_ptr->format, 0);
+        // make transparent
+        SDL_SetColorKey(op_surface_ptr, SDL_TRUE,
+                        SDL_MapRGB(op_surface_ptr->format, 0xFF, 0, 0xFF));
         if (op_surface_ptr == NULL)
         {
             printf("Unable to optimize image %s! SDL Error: %s\n", path.c_str(),
@@ -141,7 +143,7 @@ animal::animal(const std::string &file_path, SDL_Surface *window_surface_ptr)
 // -------------------------------- sheeps class ----------------
 
 sheep::sheep(SDL_Surface *window_surface_ptr)
-    : animal("../media/sheep.png", window_surface_ptr)
+    : animal("../media/sheep.bmp", window_surface_ptr)
 {
     this->_height = 55;
     this->_width = 55;
@@ -218,7 +220,7 @@ void sheep::move()
 // -------------------------------- wolfs class-----------
 
 wolf::wolf(SDL_Surface *window_surface_ptr)
-    : animal("../media/wolf.png", window_surface_ptr)
+    : animal("../media/wolf.bmp", window_surface_ptr)
 {
     std::srand(std::time(nullptr));
     this->_height = 42;
@@ -295,7 +297,7 @@ void wolf::move()
 // -------------------------------- shepherd_dog class --------------
 
 shepherd_dog::shepherd_dog(SDL_Surface *window_surface_ptr)
-    : animal("../media/Shepherd_dog.png", window_surface_ptr)
+    : animal("../media/Shepherd_dog.bmp", window_surface_ptr)
 {
     this->_height = 46;
     this->_width = 60;
@@ -380,7 +382,7 @@ void shepherd_dog::move()
 
 //---------------------- shepherd class ------------------------------
 shepherd::shepherd(SDL_Surface *window_surface_ptr)
-    : moving_object("../media/Shepherd.png", window_surface_ptr)
+    : moving_object("../media/Shepherd.bmp", window_surface_ptr)
 {
     this->_height = 89;
     this->_width = 60;
@@ -447,7 +449,7 @@ void ground::draw()
 {
     std::srand(std::time(nullptr));
     auto dst_rect = SDL_Rect{ 0, 0, (int)frame_height, (int)frame_width };
-    auto surf = load_surface_for("../media/farm.png", window_surface_ptr_);
+    auto surf = load_surface_for("../media/farm.bmp", window_surface_ptr_);
 
     if (SDL_BlitSurface(surf, NULL, window_surface_ptr_, &dst_rect))
         throw std::runtime_error("Could not apply texture.");
