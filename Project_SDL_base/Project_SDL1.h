@@ -13,7 +13,7 @@
 #include <vector>
 
 // Defintions
-constexpr double frame_rate = 30.0; // refresh rate
+constexpr double frame_rate = 60.0; // refresh rate
 constexpr double frame_time = 1000. / frame_rate;
 constexpr unsigned frame_width = 1400; // Width of window in pixel
 constexpr unsigned frame_height = 900; // Height of window in pixel
@@ -34,7 +34,8 @@ constexpr int wolf_eat_dis = 40;
 // ---------- shepherd dog --------
 constexpr float dog_spin_speed = 0.1; // 0 to 1
 constexpr int dog_dis_fr_shepherd = 150;
-constexpr int dog_dis_fr_order = 10; // the distance between the dog and the position ordered
+constexpr int dog_dis_fr_order =
+    10; // the distance between the dog and the position ordered
 
 // Helper function to initialize SDL
 void init();
@@ -60,7 +61,6 @@ public:
                   SDL_Surface *window_surface_ptr);
     virtual ~moving_object(); // Use the destructor to release memory and
     virtual void draw();
-
 };
 class animal : public moving_object
 {
@@ -78,7 +78,7 @@ class sheep : public animal
     int wolf_x = 0;
     int wolf_y = 0;
     // list of the wolfs that is near the sheep
-    std::vector<bool> wolfs_nearby; 
+    std::vector<bool> wolfs_nearby;
 
 public:
     sheep(SDL_Surface *window_surface_ptr);
@@ -92,7 +92,7 @@ class shepherd_dog : public animal
     // Ctor
     int shepherd_x = 0;
     int shepherd_y = 0;
-    bool clockwise = true; 
+    bool clockwise = true;
     //  the rotate's direction of dog
 
 public:
@@ -123,16 +123,28 @@ public:
     virtual void move() override;
     virtual void interact(moving_object &obj) override;
 };
-
-class shepherd : public moving_object
+class playable : public moving_object
 {
     char direction;
+
+public:
+    playable(const std::string &file_path, SDL_Surface *window_surface_ptr);
+    ~playable(){}; // Dtor, again for clean up (if necessary)
+
+    virtual void move(char direction){}; // Animals move around, but in a different
+    // virtual void move(char direction){};
+
+};
+
+class shepherd : public playable
+{
+    // char direction;
 
 public:
     shepherd(SDL_Surface *); // Ctor
     ~shepherd(); // Dtor, again for clean up (if necessary)
 
-    void move(char direction);
+    virtual void move(char direction) override;
     void get_order(int pos_x, int pos_y);
 };
 

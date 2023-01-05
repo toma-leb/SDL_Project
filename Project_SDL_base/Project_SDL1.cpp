@@ -223,7 +223,6 @@ void sheep::move()
     // if there are a wolf nearby then run !!!
     if (std::binary_search(wolfs_nearby.begin(), wolfs_nearby.end(), true))
     {
-        // std::cout << " wolf nearby !! \n";
         _speed += sheep_addition_speed;
         get_next_pos_to_des(_pos_x, _pos_y, wolf_x, wolf_y, _speed, _height,
                             _width, true);
@@ -352,30 +351,6 @@ void shepherd_dog::interact(moving_object &obj)
         _props["order_y"] = obj._props["order_y"];
     }
 }
-// void shepherd_dog::go_around_shepherd()
-// {
-    // int xdiff = this->_pos_x - shepherd_x;
-    // int ydiff = this->_pos_y - shepherd_y;
-
-    // // clockwise rotation
-    // _pos_x = cos(dog_spin_speed) * (xdiff)-sin(dog_spin_speed) * (ydiff)
-    //     + shepherd_x;
-    // _pos_y = sin(dog_spin_speed) * (xdiff) + cos(dog_spin_speed) * (ydiff)
-    //     + shepherd_y;
-    // if (_pos_x < 0 || _pos_x + _width > frame_width || _pos_y < 0
-    //     || _pos_y + _height > frame_height)
-    //     clockwise = !clockwise;
-    // if (!clockwise)
-    // {
-    //     // counter clockwise rotation
-    //     _pos_x = cos(dog_spin_speed) * (xdiff) + sin(dog_spin_speed) *
-    //     (ydiff)
-    //         + shepherd_x;
-    //     _pos_y = -sin(dog_spin_speed) * (xdiff) + cos(dog_spin_speed) *
-    //     (ydiff)
-    //         + shepherd_y;
-    // }
-// }
 void shepherd_dog::move()
 {
     int order_x = std::any_cast<int>(_props["order_x"]);
@@ -408,8 +383,15 @@ void shepherd_dog::move()
 }
 
 //---------------------- shepherd class ------------------------------
+playable::playable(const std::string &file_path,
+                   SDL_Surface *window_surface_ptr)
+    : moving_object(file_path, window_surface_ptr)
+{
+    std::cout << "Initialization playable character \n";
+}
+
 shepherd::shepherd(SDL_Surface *window_surface_ptr)
-    : moving_object("../media/Shepherd.bmp", window_surface_ptr)
+    : playable("../media/Shepherd.bmp", window_surface_ptr)
 {
     this->_height = 89;
     this->_width = 60;
@@ -580,16 +562,20 @@ int application::loop(unsigned period)
             {
                 switch (window_event_.key.keysym.sym)
                 {
-                case SDLK_z: case SDLK_UP:
+                case SDLK_z:
+                case SDLK_UP:
                     direction = 'u';
                     break;
-                case SDLK_s:case SDLK_DOWN:
+                case SDLK_s:
+                case SDLK_DOWN:
                     direction = 'd';
                     break;
-                case SDLK_q:case SDLK_LEFT:
+                case SDLK_q:
+                case SDLK_LEFT:
                     direction = 'l';
                     break;
-                case SDLK_d:case SDLK_RIGHT:
+                case SDLK_d:
+                case SDLK_RIGHT:
                     direction = 'r';
                     break;
                 }
