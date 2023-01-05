@@ -45,6 +45,7 @@ OWNING ptr to the screen (See main application). A vector of (smart?) pointers w
 all the animals currently existing.
 
 ## Run project
-cd Project_SDL_base 
-./run.sh (option)[number of sheeps] [number of wolfs] [durations] 
+• cd Project_SDL_base
+
+• ./run.sh (option)[number of sheeps] [number of wolfs] [durations] 
 (by default, the number of sheeps is 2, the number of wolfs is 2,the duration is 10 seconds)
