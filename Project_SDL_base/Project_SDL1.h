@@ -28,15 +28,15 @@ constexpr int sheep_offspring_counter = 100;
 constexpr int sheep_offspring_dis = 40; // collision detection for the offspring
 // ---------- wolfs ---------------
 constexpr unsigned wolf_hunger_count = 300;
-constexpr int wolf_start_search_sheep_dis = 2000;
+constexpr int wolf_start_search_prey_dis = 2000;
 constexpr int wolf_danger_dis = 90;
 constexpr int wolf_eat_dis = 40;
 // ---------- shepherd dog --------
 constexpr float dog_spin_speed = 0.1; // 0 to 1
 constexpr int dog_dis_fr_shepherd = 150;
-constexpr int dog_dis_fr_order =
-    10; // the distance between the dog and the position ordered
-
+// the distance between the dog and the position ordered
+constexpr int dog_dis_fr_order = 10;
+// --------- animals classifications ----
 // Helper function to initialize SDL
 void init();
 class moving_object
@@ -75,10 +75,10 @@ public:
 };
 class sheep : public animal
 {
-    int wolf_x = 0;
-    int wolf_y = 0;
+    int pred_x = 0; // predator position
+    int pred_y = 0; 
     // list of the wolfs that is near the sheep
-    std::vector<bool> wolfs_nearby;
+    std::vector<bool> predators_nearby;
 
 public:
     sheep(SDL_Surface *window_surface_ptr);
@@ -111,8 +111,8 @@ public:
 class wolf : public animal
 {
     // Ctor
-    int sheep_x = 0;
-    int sheep_y = 0;
+    int prey_x = 0;
+    int prey_y = 0;
     int dog_x = 0;
     int dog_y = 0;
 
@@ -131,9 +131,9 @@ public:
     playable(const std::string &file_path, SDL_Surface *window_surface_ptr);
     ~playable(){}; // Dtor, again for clean up (if necessary)
 
-    virtual void move(char direction){}; // Animals move around, but in a different
+    virtual void
+    move(char direction){}; // Animals move around, but in a different
     // virtual void move(char direction){};
-
 };
 
 class shepherd : public playable

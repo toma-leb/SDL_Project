@@ -131,7 +131,18 @@ namespace
             pos_y = -sin(speed) * (xdiff) + cos(speed) * (ydiff) + cent_y;
         }
     }
-
+    // to know if this animalis a predator or not
+    bool is_predator(std::string a_type)
+    {
+        std::vector<std::string> predators{ "wolf" };
+        return std::binary_search(predators.begin(), predators.end(), a_type);
+    }
+    // to know if this animalis a prey or not
+    bool is_prey(std::string a_type)
+    {
+        std::vector<std::string> preys{ "sheep" };
+        return std::binary_search(preys.begin(), preys.end(), a_type);
+    }
 } // namespace
 // -------------- moving object class -----------------
 moving_object::moving_object(const std::string &file_path,
@@ -189,15 +200,15 @@ sheep::~sheep()
 void sheep::interact(moving_object &obj)
 {
     int distance = get_dis_bet_2_objs(_pos_x, _pos_y, obj._pos_x, obj._pos_y);
-    bool wolf_nearby = false;
-    if (obj._type.compare("wolf") == 0)
+    bool pred_nearby = false;
+    if (is_predator(obj._type) && distance < sheep_danger_dis + _width)
     {
-        if (distance < sheep_danger_dis + _width)
-        {
-            wolf_x = obj._pos_x;
-            wolf_y = obj._pos_y;
-            wolf_nearby = true;
-        }
+        // if ()
+        // {
+        pred_x = obj._pos_x;
+        pred_y = obj._pos_y;
+        pred_nearby = true;
+        // }
     }
     if (obj._type.compare("sheep") == 0 && distance < sheep_offspring_dis)
     {
@@ -215,18 +226,19 @@ void sheep::interact(moving_object &obj)
                     _props["offspring"] = true;
             }
     }
-    wolfs_nearby.push_back(wolf_nearby);
+    predators_nearby.push_back(pred_nearby);
 }
 
 void sheep::move()
 {
     // if there are a wolf nearby then run !!!
-    if (std::binary_search(wolfs_nearby.begin(), wolfs_nearby.end(), true))
+    if (std::binary_search(predators_nearby.begin(), predators_nearby.end(),
+                           true))
     {
         _speed += sheep_addition_speed;
-        get_next_pos_to_des(_pos_x, _pos_y, wolf_x, wolf_y, _speed, _height,
+        get_next_pos_to_des(_pos_x, _pos_y, pred_x, pred_y, _speed, _height,
                             _width, true);
-        wolfs_nearby.clear();
+        predators_nearby.clear();
     }
     else
     {
@@ -250,7 +262,7 @@ wolf::wolf(SDL_Surface *window_surface_ptr)
     this->_pos_x = std::rand() % 50 + 1000; // right  || left
     this->_pos_y = std::rand() % 50 + 400; // up || down
     this->_speed = 10;
-    _props["search_sheep_dis"] = wolf_start_search_sheep_dis;
+    _props["search_sheep_dis"] = wolf_start_search_prey_dis;
     _props["hunger_count"] = wolf_hunger_count;
     _props["run_away"] = false;
 }
@@ -262,12 +274,12 @@ void wolf::interact(moving_object &obj)
 {
     int distance = get_dis_bet_2_objs(_pos_x, _pos_y, obj._pos_x, obj._pos_y);
     int search_dis = std::any_cast<int>(_props["search_sheep_dis"]);
-    if (obj._type.compare("sheep") == 0)
+    if (is_prey(obj._type))
     {
         if (distance < search_dis) // look for the closest sheep
         {
-            sheep_x = obj._pos_x;
-            sheep_y = obj._pos_y;
+            prey_x = obj._pos_x;
+            prey_y = obj._pos_y;
             _props["search_sheep_dis"] = distance;
         }
         if (distance < wolf_eat_dis) // eat sheep
@@ -276,9 +288,9 @@ void wolf::interact(moving_object &obj)
             // reset hunger count
             _props["hunger_count"] = wolf_hunger_count;
             // reset search distance
-            _props["search_sheep_dis"] = wolf_start_search_sheep_dis;
-            sheep_x = 0;
-            sheep_y = 0;
+            _props["search_sheep_dis"] = wolf_start_search_prey_dis;
+            prey_x = 0;
+            prey_y = 0;
         }
     }
     else if (obj._type.compare("shepherd_dog") == 0)
@@ -299,14 +311,14 @@ void wolf::move()
         get_next_pos_to_des(_pos_x, _pos_y, dog_x, dog_y, _speed, _height,
                             _width, true);
     }
-    else if (sheep_x != 0 && sheep_y != 0) // hunting for sheeps
+    else if (prey_x != 0 && prey_y != 0) // hunting for preys
     {
-        get_next_pos_to_des(_pos_x, _pos_y, sheep_x, sheep_y, _speed, _height,
+        get_next_pos_to_des(_pos_x, _pos_y, prey_x, prey_y, _speed, _height,
                             _width);
         _props["hunger_count"] =
             std::any_cast<unsigned>(_props["hunger_count"]) - 1;
         // reset distance
-        _props["search_sheep_dis"] = wolf_start_search_sheep_dis;
+        _props["search_sheep_dis"] = wolf_start_search_prey_dis;
     }
     else
     {
